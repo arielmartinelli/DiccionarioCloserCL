@@ -1,0 +1,303 @@
+
+:root{
+  --primary:#1565c0;
+  --accent:#64b5f6;
+  --bg:#e3f2fd;
+}
+*{font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+.bg-main{ background: var(--bg); }
+.logo{ max-height:80px; }
+.logo-sm{ max-height:40px; }
+.btn-hero{
+  background: var(--primary); color:white; border-radius: 999px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.btn-hero:hover{ transform: translateY(-2px); box-shadow: 0 0.75rem 1.5rem rgba(21,101,192,.35); color:white; }
+.card-link{ text-decoration:none; border:1px solid #eee; transition: transform .2s ease, box-shadow .2s ease; }
+.card-link:hover{ transform: translateY(-4px); box-shadow: 0 0.8rem 1.4rem rgba(0,0,0,.12); }
+.btn-sub{ border-width:2px; }
+.btn-sub:hover{ background: var(--accent); color:#0d47a1; }
+.eranc li{ margin-bottom:.6rem; }
+.reveal{ visibility:hidden; }
+.dialog-block p{ margin-bottom:.5rem; }
+/* === LOGO CENTRADO === */
+header .logo {
+  display: block;
+  margin: 0 auto 20px auto;   /* Centrado horizontal y separación inferior */
+  max-height: 80px;           /* Mantiene el tamaño actual, ajusta si querés */
+}
+
+/* === CENTRADO GLOBAL DEL LOGO EN TODAS LAS PÁGINAS === */
+.navbar-brand {
+  width: 100%;
+  display: flex;
+  justify-content: center;    /* Centra el logo horizontalmente */
+  align-items: center;
+}
+
+/* === TEXTOS (spans) ALINEADOS A LA IZQUIERDA === */
+
+
+/* === COLOR DE TEXTO GENERAL (para títulos, botones, etc.) === */
+body, p, h1, h2, h3, h4, h5, h6 {
+  color: #1f2d3d;             /* Gris azulado suave */
+}
+
+/* === BOTONES MÁS ARMÓNICOS === */
+.btn-primary, .btn-hero, .btn-sub {
+  background-color: #4f8cff !important;  /* Celeste brillante */
+  border-color: #4f8cff !important;
+}
+.btn-primary:hover, .btn-hero:hover, .btn-sub:hover {
+  background-color: #3c6fd6 !important;
+  border-color: #3c6fd6 !important;
+}
+
+/* === Ajuste visual del header general === */
+header.bg-main {
+  padding-top: 40px;
+}
+
+.card-red-border {
+  background-color: #5f6f8f;
+  color: white
+}
+
+.btn-green {
+    background-color: #3e9e55 !important; /* verde claro */
+    border: 1px solid #28a745 !important;
+    color: #ffffff;
+  }
+
+  .btn-green:hover {
+    background-color: #628a6b !important; /* verde claro */
+    border: 1px solid #28a745 !important;
+    color: #ffffff;
+  }
+
+  .btn-red {
+     background-color: #bd4141 !important; /* verde claro */
+    border: 1px solid #a72828 !important;
+    color: #ffffff;
+  }
+
+  .btn-red:hover {
+    background-color: #722c2c !important; /* verde claro */
+    border: 1px solid #a72828 !important;
+    color: #ffffff;
+  }
+  
+  a{
+    color: white !important;
+  }
+
+.cardA{
+  color: black !important;
+}
+
+.cardW{
+  color: white !important;
+}
+
+.pw{
+  color: white !important;
+}
+
+.back-container {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* Círculo con flecha */
+.back {
+  width: 50px;
+  height: 50px;
+  background-color: #2e3b55;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* Flecha hacia la izquierda */
+.back::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  transform: rotate(45deg);
+  margin-left: 3px;
+}
+
+/* Hover dinámico */
+.back:hover {
+  background-color: #3e4c70;
+  transform: translateX(-30%) scale(1.1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+footer {
+  text-align: center;
+  color: #555;
+  font-size: 0.9rem;
+  padding: 20px 0 !important;
+  background-color: transparent; /* mantenelo limpio */
+}
+
+@keyframes vibrar {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, -3px); }
+  20% { transform: translate(3px, -3px); }
+  30% { transform: translate(-3px, 3px); }
+  40% { transform: translate(3px, 3px); }
+  50% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, -2px); }
+  70% { transform: translate(-2px, 2px); }
+  80% { transform: translate(2px, 2px); }
+  90% { transform: translate(0, 0); }
+}
+
+/* === CARD BASE === */
+/* --- Card de Contratos con efecto hover dividido --- */
+.contrato-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-color: rgb(230, 230, 230);
+}
+
+.contrato-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.contrato-card .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.contrato-card:hover .overlay {
+  opacity: 1;
+}
+
+.contrato-card .overlay .side {
+  width: 50%;
+  height: 100%;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.contrato-card .overlay .left {
+  background-color: #0d6efd; /* azul */
+}
+
+.contrato-card .overlay .right {
+  background-color: #198754; /* verde */
+}
+
+.contrato-card .overlay .side:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.contrato-card .front {
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.contrato-card:hover .front {
+  opacity: 0;
+}
+
+
+/* --- Card Canales Oficiales con hover triple --- */
+.canales-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-color: #ebebeb;
+}
+
+.canales-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Contenedor oculto hasta hover */
+.canales-card .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.canales-card:hover .overlay {
+  opacity: 1;
+}
+
+/* Vista normal */
+.canales-card .front {
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.canales-card:hover .front {
+  opacity: 0;
+}
+
+/* Secciones (3 partes verticales) */
+.canales-card .overlay .section {
+  flex: 1;
+  width: 100%;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.canales-card .overlay .section:hover {
+  transform: scale(1.03);
+  filter: brightness(1.1);
+}
+
+/* Colores de cada canal */
+.canales-card .overlay .insta {
+  background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+}
+
+.canales-card .overlay .youtube {
+  background-color: #d84141;
+}
+
+.canales-card .overlay .web {
+  background-color: #3e87f5;
+}
