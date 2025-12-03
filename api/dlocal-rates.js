@@ -1,20 +1,10 @@
 export default async function handler(req, res) {
-  // Leemos las claves
-  const API_KEY = process.env.DLOCAL_API_KEY;
-  const SECRET_KEY = process.env.DLOCAL_SECRET_KEY;
+  // ⚠️ LLAVES HARDCODEADAS PARA PRUEBA DE CONEXIÓN
+  // Si esto funciona, el problema era la configuración de Vercel.
+  const API_KEY = "FIGiDdGPrpgcKoLKBJBkwRDSzxpOpecZ";
+  const SECRET_KEY = "Cov4TVofZc0CYbShMw4QSjlR7e33HzIbCXcP5x9G";
 
-  // DIAGNÓSTICO: Verificar qué clave falta (sin mostrarla por seguridad)
-  if (!API_KEY || !SECRET_KEY) {
-    const missing = [];
-    if (!API_KEY) missing.push("DLOCAL_API_KEY");
-    if (!SECRET_KEY) missing.push("DLOCAL_SECRET_KEY");
-    
-    return res.status(500).json({ 
-      error: `Faltan configurar variables en Vercel: ${missing.join(', ')}. No olvides hacer REDEPLOY.` 
-    });
-  }
-
-  // Si llegamos aquí, las claves existen. Intentamos conectar.
+  // URL de Producción (Live)
   const endpoint = 'https://api.dlocalgo.com/v1/currency-exchanges';
 
   try {
@@ -28,13 +18,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      // Si dLocal responde error, lo mostramos
-      throw new Error(`dLocal rechazó la conexión (${response.status}): ${errorText}`);
+      // Si dLocal responde error, lo enviamos al frontend para verlo
+      return res.status(response.status).json({ 
+        error: `dLocal Error (${response.status}): ${errorText}` 
+      });
     }
 
     const data = await response.json();
     
-    // Limpieza de datos
+    // Mapeo de datos para el frontend
     const cleanRates = {};
     const currencyMap = {
       'ARS': 'AR', 'MXN': 'MX', 'COP': 'CO', 'CLP': 'CL',
@@ -47,10 +39,12 @@ export default async function handler(req, res) {
       if (countryCode) cleanRates[countryCode] = item.value;
     });
 
+    // ÉXITO
     res.status(200).json(cleanRates);
 
   } catch (error) {
-    console.error("Error Backend:", error);
-    res.status(500).json({ error: error.message });
+    // Si falla el código en sí (ej. fetch no existe en versiones viejas de Node)
+    console.error("Error Crítico:", error);
+    res.status(500).json({ error: `Fallo interno del código: ${error.message}` });
   }
 }
