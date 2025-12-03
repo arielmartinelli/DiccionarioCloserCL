@@ -244,7 +244,7 @@
 
       try {
         // Llamada a nuestro Backend en Vercel
-        const response = await fetch('/api/dlocal-rates');
+        const response = await fetch('/assets/api/dlocal-rates.js');
         
         if (!response.ok) throw new Error("API Error");
         
