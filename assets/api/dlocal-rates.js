@@ -11,8 +11,8 @@ export default async function handler(req, res) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-Login': API_LOGIN,
-        'X-Trans-Key': API_KEY
+        'X-Login': FIGiDdGPrpgcKoLKBJBkwRDSzxpOpecZ,
+        'X-Trans-Key': Cov4TVofZc0CYbShMw4QSjlR7e33HzIbCXcP5x9G
         // Chequea si dLocal pide 'Authorization: Bearer' o headers X-Login
       }
     });
