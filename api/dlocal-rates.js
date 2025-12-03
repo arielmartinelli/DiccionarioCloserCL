@@ -1,27 +1,35 @@
 export default async function handler(req, res) {
-  // ⚠️ LLAVES HARDCODEADAS PARA PRUEBA DE CONEXIÓN
+  // --- CONFIGURACIÓN ---
+  
+  // 1. ¿Estás probando o vas a vender real?
+  // true = SANDBOX (Valores ficticios/estáticos, usa llaves de prueba)
+  // false = PRODUCCIÓN (Valores reales de mercado, requiere llaves LIVE)
+  const IS_SANDBOX = true; 
+
+  // 2. TUS LLAVES (Cámbialas según el entorno elegido arriba)
   const API_KEY = "FIGiDdGPrpgcKoLKBJBkwRDSzxpOpecZ";
   const SECRET_KEY = "Cov4TVofZc0CYbShMw4QSjlR7e33HzIbCXcP5x9G";
 
-  // CAMBIO IMPORTANTE: Usamos la URL de SANDBOX (Pruebas)
-  // Antes usábamos 'api.dlocalgo.com' (Producción) y por eso rebotaba las llaves.
-  const endpoint = 'https://api-sbx.dlocalgo.com/v1/currency-exchanges';
+  // ---------------------
+
+  // Selección automática del endpoint según el modo
+  const endpoint = IS_SANDBOX 
+    ? 'https://api-sbx.dlocalgo.com/v1/currency-exchanges' // Sandbox
+    : 'https://api.dlocalgo.com/v1/currency-exchanges';     // Producción (Live)
 
   try {
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        // Aseguramos que no haya espacios en blanco extra con .trim()
         'Authorization': `Bearer ${API_KEY.trim()}:${SECRET_KEY.trim()}`
       }
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      // Si dLocal responde error, lo enviamos al frontend para verlo
       return res.status(response.status).json({ 
-        error: `dLocal Error (${response.status}): ${errorText}` 
+        error: `dLocal Error (${response.status}) en modo ${IS_SANDBOX ? 'SANDBOX' : 'LIVE'}: ${errorText}` 
       });
     }
 
@@ -40,7 +48,6 @@ export default async function handler(req, res) {
       if (countryCode) cleanRates[countryCode] = item.value;
     });
 
-    // ÉXITO
     res.status(200).json(cleanRates);
 
   } catch (error) {
