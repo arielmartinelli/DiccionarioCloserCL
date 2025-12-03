@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Pagos 💳 — Diccionario del Closer</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+
+<body>
+  <!-- NAV (Mismo de siempre) -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="/index.html">
+        <img src="/assets/img/logo.png" class="logo-sm me-2" alt="Logo" />
+      </a>
+    </div>
+  </nav>
+
+  <header class="py-5 text-center bg-main">
+    <div class="container">
+      <h1 class="fw-bold animate__animated animate__fadeInDown">Calculadora de Cierre 💰</h1>
+      <p class="lead mb-0 animate__animated animate__fadeInUp animate__delay-1s" style="opacity: 0.9;">
+        Precios, divisas y financiación D-Local
+      </p>
+    </div>
+  </header>
+
+  <main class="container py-5">
+    
+    <div class="row mb-5 animate__animated animate__fadeIn">
+      <div class="col-12">
+        <div class="card shadow calculator-section p-4">
+          <div class="row g-4">
+            
+            <!-- CONFIGURACIÓN -->
+            <div class="col-lg-4 border-end-lg">
+              <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-sliders"></i> Configuración</h4>
+              
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">País del Prospecto</label>
+                <select id="countrySelect" class="form-select" onchange="updateUI()">
+                  <option value="AR">🇦🇷 Argentina</option>
+                  <option value="MX">🇲🇽 México</option>
+                  <option value="CO">🇨🇴 Colombia</option>
+                  <option value="CL">🇨🇱 Chile</option>
+                  <option value="PE">🇵🇪 Perú</option>
+                  <option value="CR">🇨🇷 Costa Rica</option>
+                  <option value="UY">🇺🇾 Uruguay</option>
+                  <option value="VE">🇻🇪 Venezuela</option>
+                  <option value="US">🇺🇸 Estados Unidos</option>
+                  <option value="ES">🇪🇺 Europa (Zona Euro)</option>
+                </select>
+                <div id="taxIdContainer" class="mt-2"></div>
+              </div>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label class="form-label fw-bold small text-uppercase text-muted mb-0">Cambio (1 USD =)</label>
+                  <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="fetchRates(true)" title="Recargar Tasas">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                  </button>
+                </div>
+                <div class="input-group mt-2">
+                  <span class="input-group-text" id="currencySymbol">$</span>
+                  <input type="number" id="exchangeRate" class="form-control" step="0.01" value="0" oninput="calculate()">
+                </div>
+                <small class="text-muted text-xs d-block mt-1" id="rateSourceLabel">*Cargando tasas...</small>
+              </div>
+
+              <hr>
+
+              <!-- Programas -->
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">Programa</label>
+                <div class="btn-group w-100" role="group">
+                  <input type="radio" class="btn-check" name="programType" id="typeTraditional" value="traditional" checked onchange="calculate()">
+                  <label class="btn btn-outline-primary" for="typeTraditional">Tradicional</label>
+
+                  <input type="radio" class="btn-check" name="programType" id="typeIntensive" value="intensive" onchange="calculate()">
+                  <label class="btn btn-outline-dark" for="typeIntensive">Intensive</label>
+                </div>
+              </div>
+
+              <div class="form-check form-switch p-0 mt-3 d-flex align-items-center justify-content-between border rounded p-2 bg-light">
+                <label class="form-check-label fw-bold ms-2" for="scholarshipSwitch">🎓 Aplicar BECA</label>
+                <input class="form-check-input me-2" type="checkbox" id="scholarshipSwitch" checked onchange="calculate()" style="width: 3em; height: 1.5em; cursor: pointer;">
+              </div>
+              
+              <hr>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">Modo de Pago</label>
+                <div class="d-grid gap-2">
+                  <input type="radio" class="btn-check" name="calcMode" id="modeSimple" value="simple" checked onchange="toggleMode()">
+                  <label class="btn btn-outline-success" for="modeSimple">⚡ Tabla Fija (Rápida)</label>
+
+                  <input type="radio" class="btn-check" name="calcMode" id="modeCustom" value="custom" onchange="toggleMode()">
+                  <label class="btn btn-outline-warning" for="modeCustom">🛠️ Armar Plan (Pago Inicial)</label>
+                </div>
+              </div>
+
+              <div id="initialPaymentBlock" class="mt-3 animate__animated animate__fadeIn" style="display: none;">
+                <label class="form-label fw-bold text-success">💰 Pago Inicial (en Euros)</label>
+                <input type="number" id="initialPayment" class="form-control border-success" value="0" placeholder="Ej: 500" oninput="calculate()">
+              </div>
+
+            </div>
+
+            <!-- RESULTADOS -->
+            <div class="col-lg-8 ps-lg-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold m-0"><i class="bi bi-receipt"></i> Plan de Inversión</h4>
+                <span id="regionBadge" class="badge bg-secondary">LATAM</span>
+              </div>
+
+              <div class="text-center bg-light rounded-3 p-4 mb-4 border border-dashed position-relative">
+                <span id="intensiveBadge" class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-dark d-none">
+                  INTENSIVE
+                </span>
+                
+                <div class="row">
+                  <div class="col-6 border-end">
+                    <small class="text-uppercase text-muted fw-bold">Total Contado (EUR)</small>
+                    <div id="totalPriceEur" class="fs-2 fw-bold text-dark">1000 €</div>
+                  </div>
+                  <div class="col-6">
+                    <small class="text-uppercase text-muted fw-bold">Total Contado (USD)</small>
+                    <div id="totalPriceUsd" class="fs-2 fw-bold text-primary">≈ $1,175</div>
+                  </div>
+                </div>
+                <div class="mt-2 text-muted fw-bold" id="localPriceDisplay">
+                  <!-- Precio local -->
+                </div>
+              </div>
+
+              <div id="intensiveAlert" class="alert alert-warning d-none">
+                <i class="bi bi-exclamation-circle-fill"></i> <strong>Atención:</strong> El programa Intensive requiere un pago inicial mínimo de <strong>1000€</strong>.
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom table-hover align-middle caption-top">
+                  <caption id="tableCaption">Tabla de Financiación</caption>
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col">Plan</th>
+                      <th scope="col" class="text-end">Cuota (USD)</th>
+                      <th scope="col" class="text-end">Moneda Local (<span id="tableCurrency">...</span>)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="installmentTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Guiones y Textos (Iguales a versión anterior) -->
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="fw-bold text-primary">💬 Objeción: "No tengo todo el dinero"</h5>
+            <div class="bg-light p-3 rounded fst-italic mt-2">
+              <p class="mb-0"><strong>C:</strong> “Veamos opciones. ¿Cuánto dispones hoy para hacer una entrega inicial y financiar el resto?”</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card shadow-sm h-100 border-start border-4 border-success">
+          <div class="card-body">
+            <h5 class="fw-bold text-success">🚀 Proceso de Cierre</h5>
+            <ol class="small mb-0 list-group list-group-flush list-group-numbered">
+              <li class="list-group-item">Confirmar precio con Beca.</li>
+              <li class="list-group-item">Ofrecer Pago Contado.</li>
+              <li class="list-group-item">Si falla: Ofrecer Tarjeta (Cuotas Fijas).</li>
+              <li class="list-group-item">Si falla: Usar modo <strong>"Armar Plan"</strong>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  
+  <div class="back-container"><a class="back" href="/index.html"></a></div>
+  <footer class="py-4 text-center text-muted small"><div class="container">© 2025 Conquer Languages</div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // --- CONSTANTES ---
+    const EUR_TO_USD = 1.175;
+    const INTEREST_RATES = { 3: 0.056, 6: 0.134, 9: 0.215, 12: 0.296 };
+    const FIXED_QUOTES = {
+      "LATAM": { 12: 127, 9: 159, 6: 222, 3: 405 },
+      "USA":   { 12: 235, 9: 300, 6: 427, 3: 811 },
+      "EU":    { 12: 200, 9: 256, 6: 368, 3: 700 }
+    };
+    const prices = {
+      "LATAM": { "traditional": { full: 1500, scholarship: 1000 }, "intensive": { full: 2500, scholarship: 2000 } },
+      "USA":   { "traditional": { full: 2500, scholarship: 2000 }, "intensive": { full: 4000, scholarship: 3500 } },
+      "EU":    { "traditional": { full: 2500, scholarship: 2000 }, "intensive": { full: 4000, scholarship: 3500 } }
+    };
+
+    // Datos Países (Por defecto / Fallback)
+    const countries = {
+      "AR": { name: "Argentina", region: "LATAM", currency: "ARS", symbol: "$", rate: 1210, taxId: "DNI / CUIL" },
+      "MX": { name: "México", region: "LATAM", currency: "MXN", symbol: "$", rate: 20.50, taxId: "CURP / IFE" },
+      "CO": { name: "Colombia", region: "LATAM", currency: "COP", symbol: "$", rate: 4400, taxId: "Cédula" },
+      "CL": { name: "Chile", region: "LATAM", currency: "CLP", symbol: "$", rate: 980, taxId: "RUT" },
+      "PE": { name: "Perú", region: "LATAM", currency: "PEN", symbol: "S/", rate: 3.80, taxId: "DNI" },
+      "CR": { name: "Costa Rica", region: "LATAM", currency: "CRC", symbol: "₡", rate: 515, taxId: "Cédula" },
+      "UY": { name: "Uruguay", region: "LATAM", currency: "UYU", symbol: "$U", rate: 42, taxId: "Cédula" },
+      "VE": { name: "Venezuela", region: "LATAM", currency: "VES", symbol: "Bs", rate: 55.0, taxId: "Cédula / RIF" },
+      "US": { name: "USA", region: "USA", currency: "USD", symbol: "$", rate: 1, taxId: "ID / SSN" },
+      "ES": { name: "Europa", region: "EU", currency: "EUR", symbol: "€", rate: 1, taxId: "DNI / NIE" }
+    };
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchRates(); // Intentar cargar tasas reales
+      toggleMode();
+    });
+
+    // 1. FUNCIÓN PARA BUSCAR TASAS DE LA API PROPIA (VERCEL)
+    async function fetchRates(isManual = false) {
+      const statusBadge = document.getElementById('apiStatus');
+      const sourceLabel = document.getElementById('rateSourceLabel');
+      
+      if(isManual) {
+        sourceLabel.innerText = "Conectando con dLocal...";
+        sourceLabel.classList.add('text-primary');
+      }
+
+      try {
+        // Llamada a nuestro Backend en Vercel
+        const response = await fetch('/api/dlocal-rates');
+        
+        if (!response.ok) throw new Error("API Error");
+        
+        const newRates = await response.json();
+        
+        // Actualizamos nuestro objeto countries con los datos frescos
+        // Se asume que newRates viene como { "MX": 21.00, "AR": 1250, ... }
+        Object.keys(newRates).forEach(code => {
+          if(countries[code] && countries[code].region === 'LATAM') {
+            countries[code].rate = newRates[code];
+          }
+        });
+
+        // UI Feedback: Éxito
+        statusBadge.innerText = "dLocal: Online 🟢";
+        statusBadge.classList.replace('bg-light', 'bg-success');
+        statusBadge.classList.replace('text-muted', 'text-white');
+        sourceLabel.innerText = "*Tasa actualizada vía dLocal API";
+        sourceLabel.classList.remove('text-primary');
+        
+        calculate(); // Recalcular todo con nuevos datos
+
+      } catch (error) {
+        console.log("Usando tasas offline/fallback:", error);
+        
+        // UI Feedback: Offline (pero funcional con datos hardcodeados)
+        statusBadge.innerText = "Offline (Datos Guardados) 🟠";
+        sourceLabel.innerText = "*Usando tasa de referencia guardada";
+      }
+    }
+
+    function updateUI() {
+      // Al cambiar país, actualizamos el input con la tasa actual (sea de API o manual)
+      const c = document.getElementById('countrySelect').value;
+      document.getElementById('exchangeRate').value = countries[c].rate;
+      calculate();
+    }
+
+    function toggleMode() {
+      const isCustom = document.getElementById('modeCustom').checked;
+      document.getElementById('initialPaymentBlock').style.display = isCustom ? 'block' : 'none';
+      document.getElementById('tableCaption').innerText = isCustom ? "Plan Personalizado" : "Cuotas Fijas (Estándar Beca)";
+      if (!isCustom) document.getElementById('initialPayment').value = 0;
+      calculate();
+    }
+
+    // --- CÁLCULO (Lógica idéntica a versión anterior) ---
+    function calculate() {
+      const countryCode = document.getElementById('countrySelect').value;
+      const data = countries[countryCode];
+      const program = document.querySelector('input[name="programType"]:checked').value;
+      const hasScholarship = document.getElementById('scholarshipSwitch').checked;
+      const mode = document.querySelector('input[name="calcMode"]:checked').value;
+      
+      // Si el usuario edita el input manualmente, usamos ese valor, si no, el del objeto
+      let exRateInput = parseFloat(document.getElementById('exchangeRate').value);
+      // Si está vacío o es 0 (primera carga), poner el del objeto
+      if (!exRateInput || exRateInput === 0) {
+         exRateInput = data.rate;
+         document.getElementById('exchangeRate').value = exRateInput;
+      }
+      
+      // UI
+      document.getElementById('currencySymbol').innerText = data.symbol;
+      document.getElementById('regionBadge').innerText = data.region;
+      document.getElementById('tableCurrency').innerText = data.currency;
+      document.getElementById('taxIdContainer').innerHTML = `<span class="badge bg-light text-primary border"><i class="bi bi-card-heading"></i> ${data.taxId}</span>`;
+
+      // Intensive Warning
+      const intensiveBadge = document.getElementById('intensiveBadge');
+      if (program === 'intensive') {
+        intensiveBadge.classList.remove('d-none');
+        document.getElementById('intensiveAlert').classList.remove('d-none');
+        if (mode === 'custom' && parseFloat(document.getElementById('initialPayment').value) === 0) {
+           document.getElementById('initialPayment').value = 1000;
+        }
+      } else {
+        intensiveBadge.classList.add('d-none');
+        document.getElementById('intensiveAlert').classList.add('d-none');
+      }
+
+      // Precios
+      const baseEur = prices[data.region][program][hasScholarship ? 'scholarship' : 'full'];
+      const baseUsd = baseEur * EUR_TO_USD;
+
+      document.getElementById('totalPriceEur').innerText = formatMoney(baseEur, 'EUR', '€');
+      document.getElementById('totalPriceUsd').innerText = '≈ ' + formatMoney(baseUsd, 'USD', '$');
+      
+      let localCash = (countryCode === 'ES') ? baseEur : (baseUsd * exRateInput);
+      document.getElementById('localPriceDisplay').innerText = `En moneda local: ${formatMoney(localCash, data.currency, data.symbol)}`;
+
+      // Tabla
+      const tbody = document.getElementById('installmentTable');
+      tbody.innerHTML = '';
+      const months = [12, 9, 6, 3];
+
+      if (mode === 'simple') {
+        if (program === 'intensive' || !hasScholarship) {
+           tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger small">⚠️ Cambia a modo "Armar Plan" para Intensive o Sin Beca.</td></tr>`;
+           return;
+        }
+        const fixedData = FIXED_QUOTES[data.region];
+        months.forEach(m => {
+          let monthlyUsdOrEur = fixedData[m];
+          let monthlyLocal = 0;
+          if (countryCode === 'ES' || countryCode === 'US') {
+            monthlyLocal = monthlyUsdOrEur;
+          } else {
+            monthlyLocal = monthlyUsdOrEur * exRateInput;
+          }
+          let symbolLabel = (countryCode === 'ES') ? '€' : '$';
+          tbody.innerHTML += `<tr><td class="fw-bold">${m} cuotas</td><td class="text-end fw-bold">${symbolLabel} ${monthlyUsdOrEur}</td><td class="text-end text-muted">${formatMoney(monthlyLocal, data.currency, '')}</td></tr>`;
+        });
+      } else {
+        let initialPayEur = parseFloat(document.getElementById('initialPayment').value) || 0;
+        let remnantEur = baseEur - initialPayEur;
+        if (remnantEur < 0) remnantEur = 0;
+
+        tbody.innerHTML += `<tr class="table-warning"><td colspan="3" class="small text-center fw-bold">Saldo a financiar: ${formatMoney(remnantEur, 'EUR', '€')}</td></tr>`;
+
+        months.forEach(m => {
+          let monthlyValBase = 0; 
+          let monthlyValLocal = 0;
+
+          if (countryCode === 'ES') {
+             let totalWithInterest = remnantEur * (1 + INTEREST_RATES[m]);
+             monthlyValBase = totalWithInterest / m;
+             monthlyValLocal = monthlyValBase;
+          } else {
+             let remnantUsd = remnantEur * EUR_TO_USD;
+             let totalWithInterest = remnantUsd * (1 + INTEREST_RATES[m]);
+             monthlyValBase = totalWithInterest / m;
+             if (countryCode === 'US') {
+               monthlyValLocal = monthlyValBase;
+             } else {
+               monthlyValLocal = monthlyValBase * exRateInput;
+             }
+          }
+          let currencyLabel = (countryCode === 'ES') ? '€' : '$';
+          tbody.innerHTML += `<tr><td>${m} x</td><td class="text-end fw-bold">${currencyLabel} ${monthlyValBase.toFixed(0)}</td><td class="text-end text-muted">${formatMoney(monthlyValLocal, data.currency, '')}</td></tr>`;
+        });
+      }
+    }
+
+    function formatMoney(amount, currency, symbol) {
+      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+    }
+  </script>
+</body>
+</html>
