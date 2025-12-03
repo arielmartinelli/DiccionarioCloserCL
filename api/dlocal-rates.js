@@ -4,11 +4,11 @@ export default async function handler(req, res) {
   // 1. ¿Estás probando o vas a vender real?
   // true = SANDBOX (Valores ficticios/estáticos, usa llaves de prueba)
   // false = PRODUCCIÓN (Valores reales de mercado, requiere llaves LIVE)
-  const IS_SANDBOX = true; 
+  const IS_SANDBOX = false; 
 
   // 2. TUS LLAVES (Cámbialas según el entorno elegido arriba)
   const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
-  const SECRET_KEY = "CFGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
+  const SECRET_KEY = "FGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
 
   // ---------------------
 
