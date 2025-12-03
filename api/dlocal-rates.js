@@ -7,8 +7,8 @@ export default async function handler(req, res) {
   const IS_SANDBOX = true; 
 
   // 2. TUS LLAVES (Cámbialas según el entorno elegido arriba)
-  const API_KEY = "FIGiDdGPrpgcKoLKBJBkwRDSzxpOpecZ";
-  const SECRET_KEY = "Cov4TVofZc0CYbShMw4QSjlR7e33HzIbCXcP5x9G";
+  const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
+  const SECRET_KEY = "CFGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
 
   // ---------------------
 
