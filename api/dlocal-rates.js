@@ -1,18 +1,19 @@
 export default async function handler(req, res) {
   // ⚠️ LLAVES HARDCODEADAS PARA PRUEBA DE CONEXIÓN
-  // Si esto funciona, el problema era la configuración de Vercel.
   const API_KEY = "FIGiDdGPrpgcKoLKBJBkwRDSzxpOpecZ";
   const SECRET_KEY = "Cov4TVofZc0CYbShMw4QSjlR7e33HzIbCXcP5x9G";
 
-  // URL de Producción (Live)
-  const endpoint = 'https://api.dlocalgo.com/v1/currency-exchanges';
+  // CAMBIO IMPORTANTE: Usamos la URL de SANDBOX (Pruebas)
+  // Antes usábamos 'api.dlocalgo.com' (Producción) y por eso rebotaba las llaves.
+  const endpoint = 'https://api-sbx.dlocalgo.com/v1/currency-exchanges';
 
   try {
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}:${SECRET_KEY}`
+        // Aseguramos que no haya espacios en blanco extra con .trim()
+        'Authorization': `Bearer ${API_KEY.trim()}:${SECRET_KEY.trim()}`
       }
     });
 
@@ -43,7 +44,6 @@ export default async function handler(req, res) {
     res.status(200).json(cleanRates);
 
   } catch (error) {
-    // Si falla el código en sí (ej. fetch no existe en versiones viejas de Node)
     console.error("Error Crítico:", error);
     res.status(500).json({ error: `Fallo interno del código: ${error.message}` });
   }
