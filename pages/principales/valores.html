@@ -5,53 +5,52 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Valores y Pagos 💳 — Diccionario del Closer</title>
-
-  <!-- Fuentes e Iconos -->
+  
+  <!-- Estilos y Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   
-  <!-- ESTILOS (Ruta ajustada bajando 2 niveles) -->
+  <!-- Ruta CSS ajustada -->
   <link rel="stylesheet" href="../../assets/css/styles.css" />
 </head>
 
 <body>
-  <!-- NAV -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center" href="/index.html">
-        <img src="/assets/img/logo.png" class="logo-sm me-2" alt="Logo" />
+      <a class="navbar-brand d-flex align-items-center" href="../../index.html">
+        <img src="../../assets/img/logo.png" class="logo-sm me-2" alt="Logo" onerror="this.style.display='none'">
+        <span class="fw-bold text-dark">Closer Dictionary</span>
       </a>
-      <!-- Indicador de estado API -->
-      <span id="apiStatus" class="badge bg-light text-muted border">Conectando...</span>
+      <!-- Indicador de estado -->
+      <span id="apiStatus" class="badge bg-secondary cursor-pointer" onclick="fetchRates(true)" title="Clic para reintentar">Conectando...</span>
     </div>
   </nav>
 
   <header class="py-5 text-center bg-main">
     <div class="container">
-      <h1 class="fw-bold animate__animated animate__fadeInDown">Calculadora de Pagos 💳</h1>
-      <p class="lead mb-0 animate__animated animate__fadeInUp animate__delay-1s" style="opacity: 0.9;">
-        Cotización en tiempo real vía dLocal Go
-      </p>
+      <h1 class="fw-bold">Calculadora de Pagos 💳</h1>
+      <p class="lead mb-0 text-white-50">Cotización dLocal Go</p>
+      <!-- Alerta de Error (Oculta por defecto) -->
+      <div id="errorAlert" class="alert alert-danger mt-3 d-none mx-auto w-50 small"></div>
     </div>
   </header>
 
   <main class="container py-5">
     
-    <!-- SECCIÓN CALCULADORA -->
-    <div class="row mb-5 animate__animated animate__fadeIn">
+    <!-- CALCULADORA -->
+    <div class="row mb-5">
       <div class="col-12">
         <div class="card shadow calculator-section p-4">
           <div class="row g-4">
             
-            <!-- COLUMNA IZQUIERDA: CONFIGURACIÓN -->
+            <!-- PANEL IZQUIERDO -->
             <div class="col-lg-4 border-end-lg">
               <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-sliders"></i> Configuración</h4>
               
-              <!-- 1. País -->
               <div class="mb-3">
-                <label class="form-label fw-bold small text-uppercase text-muted">País del Prospecto</label>
+                <label class="form-label fw-bold small text-muted">País</label>
                 <select id="countrySelect" class="form-select" onchange="updateUI()">
                   <option value="AR">🇦🇷 Argentina</option>
                   <option value="MX">🇲🇽 México</option>
@@ -62,109 +61,86 @@
                   <option value="UY">🇺🇾 Uruguay</option>
                   <option value="VE">🇻🇪 Venezuela</option>
                   <option value="US">🇺🇸 Estados Unidos</option>
-                  <option value="ES">🇪🇺 Europa (Zona Euro)</option>
+                  <option value="ES">🇪🇺 Europa</option>
                 </select>
                 <div id="taxIdContainer" class="mt-2"></div>
               </div>
 
-              <!-- 2. Tipo de Cambio -->
               <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <label class="form-label fw-bold small text-uppercase text-muted mb-0">Cambio (1 USD =)</label>
-                  <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="fetchRates(true)" title="Forzar recarga">
-                    <i class="bi bi-arrow-clockwise"></i> Actualizar
-                  </button>
-                </div>
-                <div class="input-group mt-2">
+                <label class="form-label fw-bold small text-muted d-flex justify-content-between">
+                  <span>Cambio (1 USD =)</span>
+                  <a href="#" class="text-decoration-none small" onclick="fetchRates(true)">Refrescar</a>
+                </label>
+                <div class="input-group">
                   <span class="input-group-text" id="currencySymbol">$</span>
-                  <input type="number" id="exchangeRate" class="form-control" step="0.01" value="0" oninput="calculate()">
+                  <input type="number" id="exchangeRate" class="form-control" step="0.01" oninput="calculate()">
                 </div>
-                <small class="text-muted text-xs d-block mt-1" id="rateSourceLabel">*Cargando tasas...</small>
+                <small class="text-muted text-xs d-block mt-1 fst-italic" id="rateSourceLabel">...</small>
               </div>
 
               <hr>
 
-              <!-- 3. Programa -->
+              <!-- Opciones -->
               <div class="mb-3">
-                <label class="form-label fw-bold small text-uppercase text-muted">Programa</label>
-                <div class="btn-group w-100" role="group">
+                <div class="btn-group w-100 mb-3">
                   <input type="radio" class="btn-check" name="programType" id="typeTraditional" value="traditional" checked onchange="calculate()">
                   <label class="btn btn-outline-primary" for="typeTraditional">Tradicional</label>
-
                   <input type="radio" class="btn-check" name="programType" id="typeIntensive" value="intensive" onchange="calculate()">
                   <label class="btn btn-outline-dark" for="typeIntensive">Intensive</label>
                 </div>
-              </div>
-
-              <div class="form-check form-switch p-0 mt-3 d-flex align-items-center justify-content-between border rounded p-2 bg-light">
-                <label class="form-check-label fw-bold ms-2" for="scholarshipSwitch">🎓 Aplicar BECA</label>
-                <input class="form-check-input me-2" type="checkbox" id="scholarshipSwitch" checked onchange="calculate()" style="width: 3em; height: 1.5em; cursor: pointer;">
-              </div>
-              
-              <hr>
-
-              <!-- 4. Modo de Pago -->
-              <div class="mb-3">
-                <label class="form-label fw-bold small text-uppercase text-muted">Modo de Pago</label>
-                <div class="d-grid gap-2">
-                  <input type="radio" class="btn-check" name="calcMode" id="modeSimple" value="simple" checked onchange="toggleMode()">
-                  <label class="btn btn-outline-success" for="modeSimple">⚡ Tabla Fija (Rápida)</label>
-
-                  <input type="radio" class="btn-check" name="calcMode" id="modeCustom" value="custom" onchange="toggleMode()">
-                  <label class="btn btn-outline-warning" for="modeCustom">🛠️ Armar Plan (Pago Inicial)</label>
+                
+                <div class="form-check form-switch p-2 bg-light border rounded">
+                  <input class="form-check-input ms-0 me-2" type="checkbox" id="scholarshipSwitch" checked onchange="calculate()">
+                  <label class="form-check-label fw-bold" for="scholarshipSwitch">Aplicar BECA</label>
                 </div>
               </div>
 
-              <div id="initialPaymentBlock" class="mt-3 animate__animated animate__fadeIn" style="display: none;">
-                <label class="form-label fw-bold text-success">💰 Pago Inicial (en Euros)</label>
-                <input type="number" id="initialPayment" class="form-control border-success" value="0" placeholder="Ej: 500" oninput="calculate()">
-              </div>
+              <!-- Modos de Pago -->
+               <div class="d-grid gap-2 mb-3">
+                  <input type="radio" class="btn-check" name="calcMode" id="modeSimple" value="simple" checked onchange="toggleMode()">
+                  <label class="btn btn-outline-success btn-sm" for="modeSimple">⚡ Tabla Fija</label>
 
+                  <input type="radio" class="btn-check" name="calcMode" id="modeCustom" value="custom" onchange="toggleMode()">
+                  <label class="btn btn-outline-warning btn-sm" for="modeCustom">🛠️ Armar Plan</label>
+                </div>
+
+              <div id="initialPaymentBlock" class="animate__animated animate__fadeIn" style="display: none;">
+                <label class="form-label fw-bold text-success small">💰 Pago Inicial (EUR)</label>
+                <input type="number" id="initialPayment" class="form-control border-success" value="0" oninput="calculate()">
+              </div>
             </div>
 
-            <!-- COLUMNA DERECHA: RESULTADOS -->
+            <!-- PANEL DERECHO -->
             <div class="col-lg-8 ps-lg-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold m-0"><i class="bi bi-receipt"></i> Plan de Inversión</h4>
+                <h4 class="fw-bold m-0">Plan de Inversión</h4>
                 <span id="regionBadge" class="badge bg-secondary">LATAM</span>
               </div>
 
-              <!-- Precio Principal -->
               <div class="text-center bg-light rounded-3 p-4 mb-4 border border-dashed position-relative">
-                <span id="intensiveBadge" class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-dark d-none">
-                  INTENSIVE
-                </span>
-                
+                <span id="intensiveBadge" class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-dark d-none">INTENSIVE</span>
                 <div class="row">
                   <div class="col-6 border-end">
-                    <small class="text-uppercase text-muted fw-bold">Total Contado (EUR)</small>
+                    <small class="text-muted fw-bold">CONTADO (EUR)</small>
                     <div id="totalPriceEur" class="fs-2 fw-bold text-dark">1000 €</div>
                   </div>
                   <div class="col-6">
-                    <small class="text-uppercase text-muted fw-bold">Total Contado (USD)</small>
+                    <small class="text-muted fw-bold">CONTADO (USD)</small>
                     <div id="totalPriceUsd" class="fs-2 fw-bold text-primary">≈ $1,175</div>
                   </div>
                 </div>
-                <div class="mt-2 text-muted fw-bold" id="localPriceDisplay">
-                  <!-- Precio local se inyecta aquí -->
-                </div>
+                <div class="mt-2 fw-bold text-success" id="localPriceDisplay"></div>
               </div>
 
-              <!-- Alerta Intensive -->
-              <div id="intensiveAlert" class="alert alert-warning d-none">
-                <i class="bi bi-exclamation-circle-fill"></i> <strong>Atención:</strong> El programa Intensive requiere un pago inicial mínimo de <strong>1000€</strong>.
+              <div id="intensiveAlert" class="alert alert-warning d-none py-2 small">
+                <i class="bi bi-exclamation-circle-fill"></i> Mínimo inicial: <strong>1000€</strong>.
               </div>
 
-              <!-- Tabla de Cuotas -->
               <div class="table-responsive">
-                <table class="table table-custom table-hover align-middle caption-top">
+                <table class="table table-hover align-middle caption-top">
                   <caption id="tableCaption">Tabla de Financiación</caption>
                   <thead class="table-light">
-                    <tr>
-                      <th scope="col">Plan</th>
-                      <th scope="col" class="text-end">Cuota (USD)</th>
-                      <th scope="col" class="text-end">Moneda Local (<span id="tableCurrency">...</span>)</th>
-                    </tr>
+                    <tr><th>Plan</th><th class="text-end">Cuota (USD)</th><th class="text-end">Local (<span id="tableCurrency"></span>)</th></tr>
                   </thead>
                   <tbody id="installmentTable"></tbody>
                 </table>
@@ -174,39 +150,28 @@
         </div>
       </div>
     </div>
-
   </main>
   
-  <div class="back-container">
-    <a class="back" href="../../index.html"></a>
-  </div>
-
-  <footer class="py-4 text-center text-muted small">
-    <div class="container">© 2025 Conquer Languages</div>
-  </footer>
+  <div class="back-container"><a class="back" href="../../index.html"></a></div>
+  <footer class="py-4 text-center text-muted small"><div class="container">© 2025 Conquer Languages</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
-    // --- CONSTANTES ---
     const EUR_TO_USD = 1.175;
     const INTEREST_RATES = { 3: 0.056, 6: 0.134, 9: 0.215, 12: 0.296 };
-    
-    // Cuotas Fijas (Solo para referencia rápida)
     const FIXED_QUOTES = {
       "LATAM": { 12: 127, 9: 159, 6: 222, 3: 405 },
       "USA":   { 12: 235, 9: 300, 6: 427, 3: 811 },
       "EU":    { 12: 200, 9: 256, 6: 368, 3: 700 }
     };
-    
-    // Precios Base
     const prices = {
       "LATAM": { "traditional": { full: 1500, scholarship: 1000 }, "intensive": { full: 2500, scholarship: 2000 } },
       "USA":   { "traditional": { full: 2500, scholarship: 2000 }, "intensive": { full: 4000, scholarship: 3500 } },
       "EU":    { "traditional": { full: 2500, scholarship: 2000 }, "intensive": { full: 4000, scholarship: 3500 } }
     };
 
-    // Datos Países (Valores por defecto si falla la API)
+    // Fallback data
     const countries = {
       "AR": { name: "Argentina", region: "LATAM", currency: "ARS", symbol: "$", rate: 1320, taxId: "DNI / CUIL" },
       "MX": { name: "México", region: "LATAM", currency: "MXN", symbol: "$", rate: 21.85, taxId: "CURP / IFE" },
@@ -220,69 +185,62 @@
       "ES": { name: "Europa", region: "EU", currency: "EUR", symbol: "€", rate: 1, taxId: "DNI / NIE" }
     };
 
-    // --- INICIALIZACIÓN ---
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchRates(); 
-      toggleMode();
-    });
+    document.addEventListener('DOMContentLoaded', () => { fetchRates(); toggleMode(); });
 
-    // 1. LLAMADA A LA API (BACKEND)
-    async function fetchRates(isManual = false) {
-      const statusBadge = document.getElementById('apiStatus');
-      const sourceLabel = document.getElementById('rateSourceLabel');
-      
-      if(isManual) {
-        sourceLabel.innerText = "Conectando con dLocal...";
-        sourceLabel.classList.add('text-primary');
-      }
+    async function fetchRates(manual = false) {
+      const status = document.getElementById('apiStatus');
+      const errorAlert = document.getElementById('errorAlert');
+      const label = document.getElementById('rateSourceLabel');
+
+      if (manual) status.innerText = "Conectando...";
+      errorAlert.classList.add('d-none'); // Ocultar error previo
 
       try {
-        // La ruta es relativa a la raíz del dominio
-        const response = await fetch('/api/dlocal-rates');
+        const res = await fetch('/api/dlocal-rates');
         
-        if (!response.ok) throw new Error("API Error");
-        
-        const newRates = await response.json();
-        console.log("Tasas recibidas:", newRates);
-        
-        let updatedCount = 0;
-        // Actualizamos los países con la data nueva
-        Object.keys(newRates).forEach(code => {
-          if(countries[code]) {
-            countries[code].rate = newRates[code];
-            updatedCount++;
-          }
-        });
+        // --- DIAGNÓSTICO DE ERRORES ---
+        if (res.status === 404) throw new Error("Error 404: No encuentro el archivo api/dlocal-rates.js. Revisa que la carpeta 'api' esté en la raíz.");
+        if (res.status === 500) throw new Error("Error 500: Fallo en el servidor. Revisa las API Keys en Vercel.");
+        if (!res.ok) throw new Error(`Error ${res.status}: Problema de conexión.`);
 
-        if(updatedCount > 0){
-            statusBadge.innerText = "dLocal Go: Online 🟢";
-            statusBadge.classList.replace('bg-light', 'bg-success');
-            statusBadge.classList.replace('text-muted', 'text-white');
-            sourceLabel.innerText = "*Tasa oficial dLocal Go";
-            sourceLabel.classList.remove('text-primary');
-        }
+        const data = await res.json();
         
+        // Verificar si la respuesta contiene un error de dLocal
+        if (data.error) throw new Error(data.error);
+
+        // Éxito
+        Object.keys(data).forEach(k => { if(countries[k]) countries[k].rate = data[k]; });
+        
+        status.innerText = "Online 🟢";
+        status.className = "badge bg-success";
+        label.innerText = "Tasa Oficial dLocal Go";
         updateUI();
 
-      } catch (error) {
-        console.warn("Usando tasas offline:", error);
-        statusBadge.innerText = "Offline 🟠";
-        sourceLabel.innerText = "*Usando tasa guardada (sin conexión)";
+      } catch (err) {
+        console.warn(err);
+        status.innerText = "Offline 🟠";
+        status.className = "badge bg-warning text-dark";
+        label.innerText = "Usando tasa guardada (Offline)";
+        
+        // Mostrar error detallado en pantalla para que sepas qué pasa
+        errorAlert.innerText = `Diagnóstico: ${err.message}`;
+        errorAlert.classList.remove('d-none');
+        
         updateUI();
       }
     }
 
+    // --- FUNCIONES DE CÁLCULO (Sin cambios) ---
     function updateUI() {
       const c = document.getElementById('countrySelect').value;
-      // Actualizamos el input visible
       document.getElementById('exchangeRate').value = countries[c].rate;
       calculate();
     }
-
+    
     function toggleMode() {
       const isCustom = document.getElementById('modeCustom').checked;
       document.getElementById('initialPaymentBlock').style.display = isCustom ? 'block' : 'none';
-      document.getElementById('tableCaption').innerText = isCustom ? "Plan Personalizado" : "Cuotas Fijas (Estándar Beca)";
+      document.getElementById('tableCaption').innerText = isCustom ? "Plan Personalizado" : "Cuotas Fijas";
       if (!isCustom) document.getElementById('initialPayment').value = 0;
       calculate();
     }
@@ -294,103 +252,68 @@
       const hasScholarship = document.getElementById('scholarshipSwitch').checked;
       const mode = document.querySelector('input[name="calcMode"]:checked').value;
       
-      // Obtener tasa (manual o automática)
-      let exRateInput = parseFloat(document.getElementById('exchangeRate').value);
-      if (!exRateInput || exRateInput === 0) {
-         exRateInput = data.rate;
-         document.getElementById('exchangeRate').value = exRateInput;
-      }
+      let rate = parseFloat(document.getElementById('exchangeRate').value) || data.rate;
       
-      // UI Updates
+      // UI Update
       document.getElementById('currencySymbol').innerText = data.symbol;
       document.getElementById('regionBadge').innerText = data.region;
       document.getElementById('tableCurrency').innerText = data.currency;
       document.getElementById('taxIdContainer').innerHTML = `<span class="badge bg-light text-primary border"><i class="bi bi-card-heading"></i> ${data.taxId}</span>`;
 
-      // Intensive Warning
-      const intensiveBadge = document.getElementById('intensiveBadge');
-      if (program === 'intensive') {
-        intensiveBadge.classList.remove('d-none');
-        document.getElementById('intensiveAlert').classList.remove('d-none');
-        if (mode === 'custom' && parseFloat(document.getElementById('initialPayment').value) === 0) {
-           document.getElementById('initialPayment').value = 1000;
-        }
-      } else {
-        intensiveBadge.classList.add('d-none');
-        document.getElementById('intensiveAlert').classList.add('d-none');
+      // Intensive UI
+      const isIntensive = program === 'intensive';
+      document.getElementById('intensiveBadge').classList.toggle('d-none', !isIntensive);
+      document.getElementById('intensiveAlert').classList.toggle('d-none', !isIntensive);
+      if (isIntensive && mode === 'custom' && parseFloat(document.getElementById('initialPayment').value) === 0) {
+        document.getElementById('initialPayment').value = 1000;
       }
 
-      // Precios Base (EUR) y Conversión a USD
+      // Precios
       const baseEur = prices[data.region][program][hasScholarship ? 'scholarship' : 'full'];
       const baseUsd = baseEur * EUR_TO_USD;
-
-      document.getElementById('totalPriceEur').innerText = formatMoney(baseEur, 'EUR', '€');
-      document.getElementById('totalPriceUsd').innerText = '≈ ' + formatMoney(baseUsd, 'USD', '$');
+      document.getElementById('totalPriceEur').innerText = fmt(baseEur, 'EUR');
+      document.getElementById('totalPriceUsd').innerText = '≈ ' + fmt(baseUsd, 'USD');
       
-      // Precio Local Contado
-      let localCash = (countryCode === 'ES') ? baseEur : (baseUsd * exRateInput);
-      document.getElementById('localPriceDisplay').innerText = `En moneda local: ${formatMoney(localCash, data.currency, data.symbol)}`;
+      let localVal = (countryCode === 'ES') ? baseEur : (baseUsd * rate);
+      document.getElementById('localPriceDisplay').innerText = `Local: ${fmt(localVal, data.currency)}`;
 
-      // Tabla de Cuotas
+      // Tabla
       const tbody = document.getElementById('installmentTable');
       tbody.innerHTML = '';
-      const months = [12, 9, 6, 3];
-
-      // LOGICA MODO SIMPLE (FIJO)
+      
       if (mode === 'simple') {
-        if (program === 'intensive' || !hasScholarship) {
-           tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger small">⚠️ Cambia a modo "Armar Plan" para Intensive o Sin Beca.</td></tr>`;
-           return;
+        if (isIntensive || !hasScholarship) {
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger small">Para este plan, usa el modo "Armar Plan".</td></tr>`;
+          return;
         }
-        const fixedData = FIXED_QUOTES[data.region];
-        months.forEach(m => {
-          let monthlyUsdOrEur = fixedData[m];
-          let monthlyLocal = 0;
-          if (countryCode === 'ES' || countryCode === 'US') {
-            monthlyLocal = monthlyUsdOrEur;
-          } else {
-            monthlyLocal = monthlyUsdOrEur * exRateInput;
-          }
-          let symbolLabel = (countryCode === 'ES') ? '€' : '$';
-          tbody.innerHTML += `<tr><td class="fw-bold">${m} cuotas</td><td class="text-end fw-bold">${symbolLabel} ${monthlyUsdOrEur}</td><td class="text-end text-muted">${formatMoney(monthlyLocal, data.currency, '')}</td></tr>`;
+        const fixed = FIXED_QUOTES[data.region];
+        [12, 9, 6, 3].forEach(m => {
+           let valBase = fixed[m];
+           let valLoc = (countryCode === 'ES' || countryCode === 'US') ? valBase : (valBase * rate);
+           tbody.innerHTML += `<tr><td>${m} cuotas</td><td class="text-end fw-bold">${countryCode === 'ES' ? '€' : '$'} ${valBase}</td><td class="text-end text-muted">${fmt(valLoc, data.currency)}</td></tr>`;
         });
-      } 
-      // LOGICA MODO CUSTOM (ARMAR PLAN)
-      else {
-        let initialPayEur = parseFloat(document.getElementById('initialPayment').value) || 0;
-        let remnantEur = baseEur - initialPayEur;
-        if (remnantEur < 0) remnantEur = 0;
-
-        tbody.innerHTML += `<tr class="table-warning"><td colspan="3" class="small text-center fw-bold">Saldo a financiar: ${formatMoney(remnantEur, 'EUR', '€')}</td></tr>`;
-
-        months.forEach(m => {
-          let monthlyValBase = 0; 
-          let monthlyValLocal = 0;
-
-          if (countryCode === 'ES') {
-             // Europa (Interés directo en EUR)
-             let totalWithInterest = remnantEur * (1 + INTEREST_RATES[m]);
-             monthlyValBase = totalWithInterest / m;
-             monthlyValLocal = monthlyValBase;
-          } else {
-             // Latam/USA (Interés en USD)
-             let remnantUsd = remnantEur * EUR_TO_USD;
-             let totalWithInterest = remnantUsd * (1 + INTEREST_RATES[m]);
-             monthlyValBase = totalWithInterest / m;
-             if (countryCode === 'US') {
-               monthlyValLocal = monthlyValBase;
-             } else {
-               monthlyValLocal = monthlyValBase * exRateInput;
-             }
-          }
-          let currencyLabel = (countryCode === 'ES') ? '€' : '$';
-          tbody.innerHTML += `<tr><td>${m} x</td><td class="text-end fw-bold">${currencyLabel} ${monthlyValBase.toFixed(0)}</td><td class="text-end text-muted">${formatMoney(monthlyValLocal, data.currency, '')}</td></tr>`;
+      } else {
+        let init = parseFloat(document.getElementById('initialPayment').value) || 0;
+        let remnant = Math.max(0, baseEur - init);
+        tbody.innerHTML += `<tr class="table-warning"><td colspan="3" class="small text-center fw-bold">A financiar: ${fmt(remnant, 'EUR')}</td></tr>`;
+        
+        [12, 9, 6, 3].forEach(m => {
+           let baseM = 0;
+           if (countryCode === 'ES') {
+             baseM = (remnant * (1 + INTEREST_RATES[m])) / m;
+           } else {
+             let remUsd = remnant * EUR_TO_USD;
+             baseM = (remUsd * (1 + INTEREST_RATES[m])) / m;
+           }
+           let locM = (countryCode === 'ES' || countryCode === 'US') ? baseM : (baseM * rate);
+           let sym = countryCode === 'ES' ? '€' : '$';
+           tbody.innerHTML += `<tr><td>${m} x</td><td class="text-end fw-bold">${sym} ${baseM.toFixed(0)}</td><td class="text-end text-muted">${fmt(locM, data.currency)}</td></tr>`;
         });
       }
     }
-
-    function formatMoney(amount, currency, symbol) {
-      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+    
+    function fmt(n, c) { 
+      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: c, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n); 
     }
   </script>
 </body>
