@@ -4,32 +4,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Valores y Pagos 💳 — Diccionario del Closer</title>
+  <title>Cotizador + Conversor 🚀</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   
-  <link rel="stylesheet" href="../../assets/css/styles.css" />
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
+    
+    .bg-main { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; }
+    .calculator-section { border-radius: 15px; background: white; }
+    .border-end-lg { border-right: 1px solid #dee2e6; }
+    @media (max-width: 991px) { 
+      .border-end-lg { border-right: none; border-bottom: 1px solid #dee2e6; margin-bottom: 1.5rem; padding-bottom: 1.5rem; } 
+    }
+    
+    .logo-sm { height: 40px; width: auto; }
+
+    /* Estilo especial para la Calculadora "De Bolsillo" */
+    .pocket-converter {
+        background-color: #f0fff4; /* Verde muy suave */
+        border: 1px dashed #198754;
+        border-radius: 10px;
+    }
+    .pocket-input { font-weight: bold; color: #198754; }
+    .pocket-input:focus { box-shadow: none; border-color: #198754; background-color: white; }
+
+  </style>
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+
+   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+
     <div class="container">
+
       <a class="navbar-brand d-flex align-items-center" href="../../index.html">
+
         <img src="../../assets/img/logo.png" class="logo-sm me-2" alt="Logo" onerror="this.style.display='none'">
+
       </a>
+
       <span id="apiStatus" class="badge bg-secondary cursor-pointer" onclick="fetchRates(true)">Conectando...</span>
+
     </div>
+
   </nav>
 
+
+
   <header class="py-5 text-center bg-main">
+
     <div class="container">
+
       <h1 class="fw-bold">Calculadora de Pagos 💳</h1>
+
       <!-- Alerta de Error -->
+
       <div id="errorAlert" class="alert alert-danger mt-3 d-none mx-auto w-75 small text-break"></div>
+
     </div>
+
   </header>
 
   <main class="container py-5">
@@ -40,11 +77,10 @@
           <div class="row g-4">
             
             <div class="col-lg-4 border-end-lg">
-              <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-sliders"></i> Configuración</h4>
               
+              <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-globe-americas"></i> Ajustes</h5>
               <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">País</label>
-                <select id="countrySelect" class="form-select" onchange="updateUI()">
+                <select id="countrySelect" class="form-select form-select-sm mb-2" onchange="updateUI()">
                   <option value="AR">🇦🇷 Argentina</option>
                   <option value="MX">🇲🇽 México</option>
                   <option value="CO">🇨🇴 Colombia</option>
@@ -56,85 +92,115 @@
                   <option value="US">🇺🇸 Estados Unidos</option>
                   <option value="ES">🇪🇺 Europa</option>
                 </select>
-                <div id="taxIdContainer" class="mt-2"></div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold small text-muted d-flex justify-content-between">
-                  <span>Cambio (1 USD =)</span>
-                  <a href="#" class="text-decoration-none small" onclick="fetchRates(true)">Refrescar</a>
-                </label>
-                <div class="input-group">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light">1 USD =</span>
+                  <input type="number" id="exchangeRate" class="form-control" step="0.01" oninput="converterRecalculate('rate')">
                   <span class="input-group-text" id="currencySymbol">$</span>
-                  <input type="number" id="exchangeRate" class="form-control" step="0.01" oninput="calculate()">
                 </div>
-                <small class="text-muted text-xs d-block mt-1 fst-italic" id="rateSourceLabel">...</small>
+                <small class="text-muted text-xs fst-italic" id="rateSourceLabel">...</small>
               </div>
 
               <hr>
 
+              <div class="pocket-converter p-3 mb-4">
+                <label class="small fw-bold text-success mb-2 d-block text-center">
+                  <i class="bi bi-calculator"></i> Conversor Rápido
+                </label>
+                
+                <div class="row g-2 align-items-center">
+                  <div class="col-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">€</span>
+                        <input type="number" id="convEur" class="form-control pocket-input" placeholder="0" oninput="converterRecalculate('eur')">
+                    </div>
+                  </div>
+                  <div class="col-2 text-center text-success"><i class="bi bi-arrow-left-right"></i></div>
+                  <div class="col-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text" id="convSymbol">$</span>
+                        <input type="number" id="convLocal" class="form-control pocket-input" placeholder="0" oninput="converterRecalculate('local')">
+                    </div>
+                  </div>
+                </div>
+                <small class="text-muted d-block text-center mt-1" style="font-size: 0.7rem;">
+                  Úsalo para calcular montos sueltos. No afecta la cotización.
+                </small>
+              </div>
+
+              <hr>
+
+              <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-sliders"></i> Programa</h5>
+              
               <div class="mb-3">
-                <div class="btn-group w-100 mb-3">
-                  <input type="radio" class="btn-check" name="programType" id="typeTraditional" value="traditional" checked onchange="calculate()">
-                  <label class="btn btn-outline-primary" for="typeTraditional">Tradicional</label>
-                  <input type="radio" class="btn-check" name="programType" id="typeIntensive" value="intensive" onchange="calculate()">
-                  <label class="btn btn-outline-dark" for="typeIntensive">Intensive</label>
+                <div class="btn-group w-100 mb-2">
+                  <input type="radio" class="btn-check" name="programType" id="progTraditional" value="traditional" checked onchange="calculateQuote()">
+                  <label class="btn btn-outline-primary" for="progTraditional">Tradicional</label>
+                  <input type="radio" class="btn-check" name="programType" id="progIntensive" value="intensive" onchange="calculateQuote()">
+                  <label class="btn btn-outline-dark" for="progIntensive">Intensive</label>
                 </div>
                 
-                <div class="form-check form-switch p-2 bg-light border rounded">
-                  <input class="form-check-input ms-0 me-2" type="checkbox" id="scholarshipSwitch" checked onchange="calculate()">
-                  <label class="form-check-label fw-bold" for="scholarshipSwitch">Aplicar BECA</label>
+                <div class="form-check form-switch bg-light p-2 rounded border">
+                  <input class="form-check-input ms-0 me-2" type="checkbox" id="scholarshipSwitch" checked onchange="calculateQuote()">
+                  <label class="form-check-label fw-bold small" for="scholarshipSwitch">Con Beca Aplicada</label>
                 </div>
               </div>
 
-               <div class="d-grid gap-2 mb-3">
-                  <input type="radio" class="btn-check" name="calcMode" id="modeSimple" value="simple" checked onchange="toggleMode()">
-                  <label class="btn btn-outline-success btn-sm" for="modeSimple">⚡ Tabla Fija</label>
-
-                  <input type="radio" class="btn-check" name="calcMode" id="modeCustom" value="custom" onchange="toggleMode()">
-                  <label class="btn btn-outline-warning btn-sm" for="modeCustom">🛠️ Armar Plan</label>
-                </div>
-
-              <div id="initialPaymentBlock" class="animate__animated animate__fadeIn" style="display: none;">
-                <label class="form-label fw-bold text-success small">💰 Pago Inicial (EUR)</label>
-                <input type="number" id="initialPayment" class="form-control border-success" value="0" oninput="calculate()">
+              <div class="mt-3">
+                 <label class="form-label fw-bold text-dark small d-flex justify-content-between">
+                    <span><i class="bi bi-cash-stack"></i> Pago Inicial / Reserva</span>
+                 </label>
+                 <div class="input-group">
+                    <span class="input-group-text bg-warning-subtle text-dark fw-bold">€</span>
+                    <input type="number" id="initialPayment" class="form-control border-warning fw-bold" value="0" oninput="calculateQuote()">
+                 </div>
+                 <small class="text-muted" style="font-size: 0.75rem;">Si el cliente paga algo ahora, ponlo aquí (en Euros).</small>
               </div>
+
             </div>
 
             <div class="col-lg-8 ps-lg-4">
+              
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold m-0">Plan de Inversión</h4>
-                <span id="regionBadge" class="badge bg-secondary">LATAM</span>
+                <h4 class="fw-bold m-0 text-primary">Inversión Oficial</h4>
+                <div id="taxIdContainer"></div>
               </div>
 
               <div class="text-center bg-light rounded-3 p-4 mb-4 border border-dashed position-relative">
                 <span id="intensiveBadge" class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-dark d-none">INTENSIVE</span>
-                <div class="row">
-                  <div class="col-6 border-end">
-                    <small class="text-muted fw-bold">CONTADO (EUR)</small>
-                    <div id="totalPriceEur" class="fs-2 fw-bold text-dark">1000 €</div>
+
+                <div class="row align-items-center justify-content-center">
+                  <div class="col-md-5 border-end">
+                    <small class="text-muted fw-bold d-block">PRECIO LISTA (EUR)</small>
+                    <div id="displayTotalEur" class="fs-2 fw-bold text-dark">1000 €</div>
                   </div>
-                  <div class="col-6">
-                    <small class="text-muted fw-bold">CONTADO (USD)</small>
-                    <div id="totalPriceUsd" class="fs-2 fw-bold text-primary">≈ $1,175</div>
+                  <div class="col-md-5">
+                     <small class="text-muted fw-bold d-block">APROXIMADO (USD)</small>
+                    <div id="displayTotalUsd" class="fs-2 fw-bold text-primary">≈ $1,175</div>
                   </div>
                 </div>
-                <div class="mt-2 fw-bold text-success" id="localPriceDisplay"></div>
+                
+                <hr>
+                
+                <div class="fw-bold text-success fs-3" id="displayTotalLocal">Local: $0</div>
+                <small class="text-muted fst-italic" style="font-size: 0.8rem;">*Sujeto a cotización del día (1 EUR = 1.175 USD)</small>
               </div>
 
               <div id="intensiveAlert" class="alert alert-warning d-none py-2 small">
-                <i class="bi bi-exclamation-circle-fill"></i> Mínimo inicial: <strong>1000€</strong>.
+                <i class="bi bi-exclamation-triangle-fill"></i> Para el plan Intensive, se recomienda un pago inicial fuerte.
               </div>
 
               <div class="table-responsive">
                 <table class="table table-hover align-middle caption-top">
-                  <caption id="tableCaption">Tabla de Financiación</caption>
+                  <caption id="tableCaption" class="fw-bold text-dark">Plan de Financiación (Saldo Restante)</caption>
                   <thead class="table-light">
-                    <tr><th>Plan</th><th class="text-end">Cuota (USD)</th><th class="text-end">Local (<span id="tableCurrency"></span>)</th></tr>
+                    <tr><th>Cuotas</th><th class="text-end">Valor Cuota (USD)</th><th class="text-end">Valor Local (<span id="tableCurrency"></span>)</th></tr>
                   </thead>
                   <tbody id="installmentTable"></tbody>
                 </table>
               </div>
+              
+              <div id="financeNote" class="text-end text-muted small fst-italic mt-2"></div>
+
             </div>
           </div>
         </div>
@@ -142,7 +208,6 @@
     </div>
   </main>
   
-  <div class="back-container"><a class="back" href="../../index.html"></a></div>
   <footer class="py-4 text-center text-muted small"><div class="container">© 2025 Conquer Languages</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -150,11 +215,14 @@
   <script>
     const EUR_TO_USD = 1.175;
     const INTEREST_RATES = { 3: 0.056, 6: 0.134, 9: 0.215, 12: 0.296 };
+    
+    // Tablas fijas (Solo se usan si NO hay pago inicial y es Tradicional)
     const FIXED_QUOTES = {
       "LATAM": { 12: 127, 9: 159, 6: 222, 3: 405 },
       "USA":   { 12: 235, 9: 300, 6: 427, 3: 811 },
       "EU":    { 12: 200, 9: 256, 6: 368, 3: 700 }
     };
+    
     const prices = {
       "LATAM": { "traditional": { full: 1500, scholarship: 1000 }, "intensive": { full: 2500, scholarship: 2000 } },
       "USA":   { "traditional": { full: 2500, scholarship: 2000 }, "intensive": { full: 4000, scholarship: 3500 } },
@@ -174,123 +242,165 @@
       "ES": { name: "Europa", region: "EU", currency: "EUR", symbol: "€", rate: 1, taxId: "DNI / NIE" }
     };
 
-    document.addEventListener('DOMContentLoaded', () => { fetchRates(); toggleMode(); });
+    document.addEventListener('DOMContentLoaded', () => { fetchRates(); });
 
+    // --- 1. API DE TASAS ---
     async function fetchRates(manual = false) {
       const status = document.getElementById('apiStatus');
       const errorAlert = document.getElementById('errorAlert');
       const label = document.getElementById('rateSourceLabel');
-
-      if (manual) status.innerText = "Conectando...";
+      
+      if (manual) status.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i> Conectando...';
       errorAlert.classList.add('d-none'); 
 
       try {
         const res = await fetch('/api/dlocal-rates');
-        
-        // --- DIAGNÓSTICO REAL ---
-        if (!res.ok) {
-           const errJson = await res.json().catch(() => ({}));
-           const errText = errJson.error || res.statusText;
-           throw new Error(`Error ${res.status}: ${errText}`);
-        }
-
+        if (!res.ok) throw new Error("Error de red");
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
-
         Object.keys(data).forEach(k => { if(countries[k]) countries[k].rate = data[k]; });
         
-        status.innerText = "Online 🟢";
-        status.className = "badge bg-success";
+        status.innerHTML = '<i class="bi bi-check-circle-fill"></i> Online';
+        status.className = "badge bg-success text-white cursor-pointer mt-2 shadow-sm";
         label.innerText = "Tasa Oficial dLocal Go";
         updateUI();
 
       } catch (err) {
-        console.warn(err);
-        status.innerText = "Offline 🟠";
-        status.className = "badge bg-warning text-dark";
-        label.innerText = "Usando tasa guardada (Offline)";
-        
-        // Muestra el mensaje EXACTO del error
-        errorAlert.innerText = `Diagnóstico: ${err.message}`;
-        errorAlert.classList.remove('d-none');
+        status.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Offline';
+        status.className = "badge bg-warning text-dark cursor-pointer mt-2 shadow-sm";
+        label.innerText = "Tasa Guardada (Offline)";
         updateUI();
       }
     }
 
+    // --- 2. ACTUALIZACIÓN GENERAL ---
     function updateUI() {
       const c = document.getElementById('countrySelect').value;
+      
+      // Actualizar inputs de configuración
       document.getElementById('exchangeRate').value = countries[c].rate;
-      calculate();
-    }
-    
-    function toggleMode() {
-      const isCustom = document.getElementById('modeCustom').checked;
-      document.getElementById('initialPaymentBlock').style.display = isCustom ? 'block' : 'none';
-      document.getElementById('tableCaption').innerText = isCustom ? "Plan Personalizado" : "Cuotas Fijas";
-      if (!isCustom) document.getElementById('initialPayment').value = 0;
-      calculate();
+      document.getElementById('currencySymbol').innerText = countries[c].symbol;
+      document.getElementById('convSymbol').innerText = countries[c].symbol;
+      
+      // Limpiar conversor al cambiar país para evitar confusión
+      document.getElementById('convEur').value = "";
+      document.getElementById('convLocal').value = "";
+
+      // Recalcular Cotización Principal
+      calculateQuote();
     }
 
-    function calculate() {
+    // --- 3. LOGICA DEL CONVERSOR RÁPIDO (INDEPENDIENTE) ---
+    function converterRecalculate(source) {
+        const c = document.getElementById('countrySelect').value;
+        const rate = parseFloat(document.getElementById('exchangeRate').value) || countries[c].rate;
+        
+        const inpEur = document.getElementById('convEur');
+        const inpLocal = document.getElementById('convLocal');
+
+        if (source === 'eur') {
+            let valEur = parseFloat(inpEur.value) || 0;
+            // EUR -> USD -> LOCAL
+            let valUsd = valEur * EUR_TO_USD;
+            let valLoc = (c === 'ES') ? valEur : (valUsd * rate);
+            inpLocal.value = (valLoc % 1 === 0) ? valLoc : valLoc.toFixed(2);
+        
+        } else if (source === 'local') {
+            let valLoc = parseFloat(inpLocal.value) || 0;
+            // LOCAL -> USD -> EUR
+            let valEur = 0;
+            if (c === 'ES') valEur = valLoc;
+            else {
+                let valUsd = valLoc / rate;
+                valEur = valUsd / EUR_TO_USD;
+            }
+            inpEur.value = (valEur % 1 === 0) ? valEur : valEur.toFixed(2);
+        } else if (source === 'rate') {
+             // Si cambia la tasa, actualizamos la cotización oficial
+             calculateQuote();
+             // Y si hay algo escrito en el conversor, lo refrescamos
+             if(inpEur.value) converterRecalculate('eur');
+        }
+    }
+
+    // --- 4. LOGICA DE LA COTIZACIÓN OFICIAL (FIJA + PAGO INICIAL) ---
+    function calculateQuote() {
       const countryCode = document.getElementById('countrySelect').value;
       const data = countries[countryCode];
+      let rate = parseFloat(document.getElementById('exchangeRate').value) || data.rate;
+
+      // A) DETERMINAR PRECIO BASE (Siempre viene de los botones)
       const program = document.querySelector('input[name="programType"]:checked').value;
       const hasScholarship = document.getElementById('scholarshipSwitch').checked;
-      const mode = document.querySelector('input[name="calcMode"]:checked').value;
+      const baseEur = prices[data.region][program][hasScholarship ? 'scholarship' : 'full'];
       
-      let rate = parseFloat(document.getElementById('exchangeRate').value) || data.rate;
-      
-      document.getElementById('currencySymbol').innerText = data.symbol;
-      document.getElementById('regionBadge').innerText = data.region;
-      document.getElementById('tableCurrency').innerText = data.currency;
-      document.getElementById('taxIdContainer').innerHTML = `<span class="badge bg-light text-primary border"><i class="bi bi-card-heading"></i> ${data.taxId}</span>`;
-
+      // Badges UI
       const isIntensive = program === 'intensive';
       document.getElementById('intensiveBadge').classList.toggle('d-none', !isIntensive);
       document.getElementById('intensiveAlert').classList.toggle('d-none', !isIntensive);
-      if (isIntensive && mode === 'custom' && parseFloat(document.getElementById('initialPayment').value) === 0) {
-        document.getElementById('initialPayment').value = 1000;
-      }
 
-      const baseEur = prices[data.region][program][hasScholarship ? 'scholarship' : 'full'];
+      // B) MOSTRAR PRECIO GRANDE (INALTERABLE por pago inicial)
       const baseUsd = baseEur * EUR_TO_USD;
-      document.getElementById('totalPriceEur').innerText = fmt(baseEur, 'EUR');
-      document.getElementById('totalPriceUsd').innerText = '≈ ' + fmt(baseUsd, 'USD');
-      
       let localVal = (countryCode === 'ES') ? baseEur : (baseUsd * rate);
-      document.getElementById('localPriceDisplay').innerText = `Local: ${fmt(localVal, data.currency)}`;
 
+      document.getElementById('tableCurrency').innerText = data.currency;
+      document.getElementById('taxIdContainer').innerHTML = `<span class="badge bg-light text-primary border"><i class="bi bi-card-heading"></i> ${data.taxId}</span>`;
+
+      document.getElementById('displayTotalEur').innerText = fmt(baseEur, 'EUR');
+      document.getElementById('displayTotalUsd').innerText = '≈ ' + fmt(baseUsd, 'USD');
+      document.getElementById('displayTotalLocal').innerText = `Local: ${fmt(localVal, data.currency)}`;
+
+      // C) CALCULAR FINANCIACIÓN (Aquí sí entra el Pago Inicial)
+      let initEur = parseFloat(document.getElementById('initialPayment').value) || 0;
+      let remnantEur = Math.max(0, baseEur - initEur);
+      
       const tbody = document.getElementById('installmentTable');
       tbody.innerHTML = '';
-      
-      if (mode === 'simple') {
-        if (isIntensive || !hasScholarship) {
-          tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger small">Para este plan, usa el modo "Armar Plan".</td></tr>`;
-          return;
-        }
-        const fixed = FIXED_QUOTES[data.region];
-        [12, 9, 6, 3].forEach(m => {
-           let valBase = fixed[m];
-           let valLoc = (countryCode === 'ES' || countryCode === 'US') ? valBase : (valBase * rate);
-           tbody.innerHTML += `<tr><td>${m} cuotas</td><td class="text-end fw-bold">${countryCode === 'ES' ? '€' : '$'} ${valBase}</td><td class="text-end text-muted">${fmt(valLoc, data.currency)}</td></tr>`;
-        });
-      } else {
-        let init = parseFloat(document.getElementById('initialPayment').value) || 0;
-        let remnant = Math.max(0, baseEur - init);
-        tbody.innerHTML += `<tr class="table-warning"><td colspan="3" class="small text-center fw-bold">A financiar: ${fmt(remnant, 'EUR')}</td></tr>`;
-        
-        [12, 9, 6, 3].forEach(m => {
-           let baseM = 0;
-           if (countryCode === 'ES') {
-             baseM = (remnant * (1 + INTEREST_RATES[m])) / m;
-           } else {
-             let remUsd = remnant * EUR_TO_USD;
-             baseM = (remUsd * (1 + INTEREST_RATES[m])) / m;
-           }
-           let locM = (countryCode === 'ES' || countryCode === 'US') ? baseM : (baseM * rate);
-           let sym = countryCode === 'ES' ? '€' : '$';
-           tbody.innerHTML += `<tr><td>${m} x</td><td class="text-end fw-bold">${sym} ${baseM.toFixed(0)}</td><td class="text-end text-muted">${fmt(locM, data.currency)}</td></tr>`;
-        });
+      const note = document.getElementById('financeNote');
+
+      // Caso 1: Tabla Fija (Solo Tradicional, Sin pago inicial, con Beca)
+      // Usamos la tabla fija hardcodeada solo si NO hay pago inicial y es el caso estándar
+      if (initEur === 0 && !isIntensive && hasScholarship) {
+          const fixed = FIXED_QUOTES[data.region];
+          [12, 9, 6, 3].forEach(m => {
+             let valBase = fixed[m]; // Cuota fija en USD o EUR
+             let valLoc = (countryCode === 'ES' || countryCode === 'US') ? valBase : (valBase * rate);
+             tbody.innerHTML += `<tr>
+                <td><span class="badge bg-primary rounded-pill">${m}</span> Cuotas</td>
+                <td class="text-end fw-bold">${countryCode === 'ES'?'€':'$'} ${valBase}</td>
+                <td class="text-end text-muted">${fmt(valLoc, data.currency)}</td>
+             </tr>`;
+          });
+          note.innerText = "Precios de tabla oficial.";
+      } 
+      // Caso 2: Cálculo Dinámico (Intensive, Sin Beca, o CON Pago Inicial)
+      else {
+          if (initEur > 0) {
+              tbody.innerHTML += `<tr class="table-warning"><td colspan="3" class="text-center small fw-bold">
+                  Total: ${fmt(baseEur, 'EUR')} | Inicial: -${fmt(initEur, 'EUR')} <br>
+                  A financiar: ${fmt(remnantEur, 'EUR')}
+              </td></tr>`;
+          }
+
+          [12, 9, 6, 3].forEach(m => {
+             let quoteAmount = 0;
+             // Formula de interés
+             if (countryCode === 'ES') {
+               quoteAmount = (remnantEur * (1 + INTEREST_RATES[m])) / m;
+             } else {
+               let remnantUsd = remnantEur * EUR_TO_USD;
+               quoteAmount = (remnantUsd * (1 + INTEREST_RATES[m])) / m;
+             }
+             
+             let quoteLoc = (countryCode === 'ES' || countryCode === 'US') ? quoteAmount : (quoteAmount * rate);
+             let sym = countryCode === 'ES' ? '€' : '$';
+             
+             tbody.innerHTML += `<tr>
+                <td><span class="badge bg-secondary rounded-pill">${m}</span> Cuotas</td>
+                <td class="text-end fw-bold">${sym} ${quoteAmount.toFixed(0)}</td>
+                <td class="text-end text-muted">${fmt(quoteLoc, data.currency)}</td>
+             </tr>`;
+          });
+          note.innerText = "Financiación calculada sobre saldo restante.";
       }
     }
     
