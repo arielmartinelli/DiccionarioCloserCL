@@ -8,8 +8,8 @@ export default async function handler(req, res) {
 
   // 2. OBTENER LLAVES DE VERCEL (Seguridad)
   // Ya no están hardcodeadas. Asegúrate de actualizarlas en el panel de Vercel.
-  const API_KEY = hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV;
-  const SECRET_KEY = CFGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU;
+  const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
+  const SECRET_KEY = "CFGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
 
   if (!API_KEY || !SECRET_KEY) {
     return res.status(500).json({ error: 'Faltan configurar las API Keys en Vercel (Revisa Environment Variables)' });
