@@ -4,23 +4,20 @@ export default async function handler(req, res) {
   // 1. Entorno: false para PRODUCCIÓN (Claves reales)
   const IS_SANDBOX = false; 
 
-  // 2. LLAVES SEGURAS (Variables de Entorno)
-  // Las lee desde la configuración de Vercel. NO están visibles en el código.
-  // Asegúrate de haber agregado DLOCAL_API_KEY y DLOCAL_SECRET_KEY en Vercel.
-  const API_KEY = process.env.DLOCAL_API_KEY;
-  const SECRET_KEY = process.env.DLOCAL_SECRET_KEY;
+  // 2. LLAVES FORZADAS (Hardcoded)
+  // Las hemos escrito directamente aquí para evitar errores de configuración en Vercel.
+  const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
+  const SECRET_KEY = "FGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
 
-  // Validación de seguridad: Si Vercel no tiene las claves, avisamos al log pero no mostramos nada sensible.
   if (!API_KEY || !SECRET_KEY) {
-    console.error("Error: Faltan las variables de entorno DLOCAL_API_KEY o DLOCAL_SECRET_KEY.");
-    return res.status(500).json({ error: 'Error de configuración del servidor (Faltan credenciales).' });
+    return res.status(500).json({ error: 'Faltan las API Keys en el código.' });
   }
 
   // ---------------------
 
   const endpoint = IS_SANDBOX 
-    ? 'https://api-sbx.dlocalgo.com/v1/currency-exchanges'
-    : 'https://api.dlocalgo.com/v1/currency-exchanges';
+    ? 'https://api-sbx.dlocalgo.com/v1/currency-exchanges' // Sandbox
+    : 'https://api.dlocalgo.com/v1/currency-exchanges';     // Producción (Live)
 
   try {
     const response = await fetch(endpoint, {
@@ -33,15 +30,15 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Error dLocal:", errorText); // Para ver en logs de Vercel
+      console.error("Error dLocal:", errorText); 
       return res.status(response.status).json({ 
-        error: `dLocal respondió error (${response.status}): ${errorText}` 
+        error: `dLocal Error (${response.status}) en modo ${IS_SANDBOX ? 'SANDBOX' : 'LIVE'}: ${errorText}` 
       });
     }
 
     const data = await response.json();
     
-    // Mapeo para el frontend
+    // Mapeo de datos para el frontend
     const cleanRates = {};
     const currencyMap = {
       'ARS': 'AR', 'MXN': 'MX', 'COP': 'CO', 'CLP': 'CL',
@@ -49,7 +46,7 @@ export default async function handler(req, res) {
       'BOB': 'BO', 'PYG': 'PY', 'USD': 'US', 'EUR': 'ES'
     };
 
-    // Validamos que sea un array antes de iterar
+    // Validación de formato
     if (Array.isArray(data)) {
       data.forEach(item => {
         const countryCode = currencyMap[item.target_currency];
@@ -64,6 +61,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Error Crítico:", error);
-    res.status(500).json({ error: `Fallo interno: ${error.message}` });
+    res.status(500).json({ error: `Fallo interno del código: ${error.message}` });
   }
 }
