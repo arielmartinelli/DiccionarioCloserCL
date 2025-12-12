@@ -22,6 +22,7 @@
     }
     
     .logo-sm { height: 40px; width: auto; }
+    .cursor-pointer { cursor: pointer; }
 
     /* Estilo especial para la Calculadora "De Bolsillo" */
     .pocket-converter {
@@ -32,41 +33,31 @@
     .pocket-input { font-weight: bold; color: #198754; }
     .pocket-input:focus { box-shadow: none; border-color: #198754; background-color: white; }
 
+    /* Animación de carga */
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .animate-spin { display: inline-block; animation: spin 1s linear infinite; }
+
   </style>
 </head>
 
 <body>
 
    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-
     <div class="container">
-
       <a class="navbar-brand d-flex align-items-center" href="../../index.html">
-
         <img src="../../assets/img/logo.png" class="logo-sm me-2" alt="Logo" onerror="this.style.display='none'">
-
       </a>
-
+      <!-- ID apiStatus es crucial para el script -->
       <span id="apiStatus" class="badge bg-secondary cursor-pointer" onclick="fetchRates(true)">Conectando...</span>
-
     </div>
-
   </nav>
 
-
-
   <header class="py-5 text-center bg-main">
-
     <div class="container">
-
       <h1 class="fw-bold">Calculadora de Pagos 💳</h1>
-
-      <!-- Alerta de Error -->
-
+      <!-- ID errorAlert es crucial para el script -->
       <div id="errorAlert" class="alert alert-danger mt-3 d-none mx-auto w-75 small text-break"></div>
-
     </div>
-
   </header>
 
   <main class="container py-5">
@@ -97,6 +88,7 @@
                   <input type="number" id="exchangeRate" class="form-control" step="0.01" oninput="converterRecalculate('rate')">
                   <span class="input-group-text" id="currencySymbol">$</span>
                 </div>
+                <!-- ID rateSourceLabel es crucial -->
                 <small class="text-muted text-xs fst-italic" id="rateSourceLabel">...</small>
               </div>
 
@@ -147,7 +139,7 @@
 
               <div class="mt-3">
                  <label class="form-label fw-bold text-dark small d-flex justify-content-between">
-                    <span><i class="bi bi-cash-stack"></i> Pago Inicial / Reserva</span>
+                   <span><i class="bi bi-cash-stack"></i> Pago Inicial / Reserva</span>
                  </label>
                  <div class="input-group">
                     <span class="input-group-text bg-warning-subtle text-dark fw-bold">€</span>
@@ -244,19 +236,36 @@
 
     document.addEventListener('DOMContentLoaded', () => { fetchRates(); });
 
-    // --- 1. API DE TASAS ---
+    // --- 1. API DE TASAS (CON SEGURIDAD PARA NULL) ---
     async function fetchRates(manual = false) {
       const status = document.getElementById('apiStatus');
       const errorAlert = document.getElementById('errorAlert');
       const label = document.getElementById('rateSourceLabel');
       
+      // Safety Checks (Evita el crash si el HTML no cargó bien)
+      if (!status || !errorAlert || !label) {
+          console.error("Elementos del DOM no encontrados. Verifica los IDs en el HTML.");
+          return;
+      }
+
       if (manual) status.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i> Conectando...';
-      errorAlert.classList.add('d-none'); 
+      
+      // Aquí ocurría el error: si errorAlert era null, classList fallaba.
+      if (errorAlert) errorAlert.classList.add('d-none'); 
 
       try {
         const res = await fetch('/api/dlocal-rates');
-        if (!res.ok) throw new Error("Error de red");
+
+        if (res.status === 404) throw new Error("Error 404: No encuentro 'api/dlocal-rates.js'.");
+        if (res.status === 500) throw new Error("Error 500: Fallo en el servidor (Revisa las keys).");
+        if (!res.ok) {
+             const txt = await res.text();
+             throw new Error(`Error ${res.status}: ${txt}`);
+        }
+
         const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
         Object.keys(data).forEach(k => { if(countries[k]) countries[k].rate = data[k]; });
         
         status.innerHTML = '<i class="bi bi-check-circle-fill"></i> Online';
@@ -265,48 +274,67 @@
         updateUI();
 
       } catch (err) {
-        status.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Offline';
-        status.className = "badge bg-warning text-dark cursor-pointer mt-2 shadow-sm";
-        label.innerText = "Tasa Guardada (Offline)";
+        console.warn(err);
+        if (status) {
+            status.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Offline';
+            status.className = "badge bg-warning text-dark cursor-pointer mt-2 shadow-sm";
+        }
+        if (label) label.innerText = "Tasa Guardada (Offline)";
+        
+        if (errorAlert) {
+            errorAlert.innerHTML = `<strong>Diagnóstico:</strong> ${err.message}`;
+            errorAlert.classList.remove('d-none');
+        }
+        
         updateUI();
       }
     }
 
     // --- 2. ACTUALIZACIÓN GENERAL ---
     function updateUI() {
-      const c = document.getElementById('countrySelect').value;
+      const countrySelect = document.getElementById('countrySelect');
+      if(!countrySelect) return;
       
-      // Actualizar inputs de configuración
-      document.getElementById('exchangeRate').value = countries[c].rate;
-      document.getElementById('currencySymbol').innerText = countries[c].symbol;
-      document.getElementById('convSymbol').innerText = countries[c].symbol;
+      const c = countrySelect.value;
       
-      // Limpiar conversor al cambiar país para evitar confusión
-      document.getElementById('convEur').value = "";
-      document.getElementById('convLocal').value = "";
+      // Update Inputs
+      const exRateInput = document.getElementById('exchangeRate');
+      if(exRateInput) exRateInput.value = countries[c].rate;
+      
+      const currSym = document.getElementById('currencySymbol');
+      if(currSym) currSym.innerText = countries[c].symbol;
 
-      // Recalcular Cotización Principal
+      const convSym = document.getElementById('convSymbol');
+      if(convSym) convSym.innerText = countries[c].symbol;
+      
+      const convEur = document.getElementById('convEur');
+      if(convEur) convEur.value = "";
+      
+      const convLocal = document.getElementById('convLocal');
+      if(convLocal) convLocal.value = "";
+
       calculateQuote();
     }
 
-    // --- 3. LOGICA DEL CONVERSOR RÁPIDO (INDEPENDIENTE) ---
+    // --- 3. CONVERSOR RÁPIDO ---
     function converterRecalculate(source) {
         const c = document.getElementById('countrySelect').value;
-        const rate = parseFloat(document.getElementById('exchangeRate').value) || countries[c].rate;
+        const exRateEl = document.getElementById('exchangeRate');
+        const rate = parseFloat(exRateEl ? exRateEl.value : 0) || countries[c].rate;
         
         const inpEur = document.getElementById('convEur');
         const inpLocal = document.getElementById('convLocal');
+        
+        if (!inpEur || !inpLocal) return;
 
         if (source === 'eur') {
             let valEur = parseFloat(inpEur.value) || 0;
-            // EUR -> USD -> LOCAL
             let valUsd = valEur * EUR_TO_USD;
             let valLoc = (c === 'ES') ? valEur : (valUsd * rate);
             inpLocal.value = (valLoc % 1 === 0) ? valLoc : valLoc.toFixed(2);
         
         } else if (source === 'local') {
             let valLoc = parseFloat(inpLocal.value) || 0;
-            // LOCAL -> USD -> EUR
             let valEur = 0;
             if (c === 'ES') valEur = valLoc;
             else {
@@ -315,54 +343,69 @@
             }
             inpEur.value = (valEur % 1 === 0) ? valEur : valEur.toFixed(2);
         } else if (source === 'rate') {
-             // Si cambia la tasa, actualizamos la cotización oficial
              calculateQuote();
-             // Y si hay algo escrito en el conversor, lo refrescamos
              if(inpEur.value) converterRecalculate('eur');
         }
     }
 
-    // --- 4. LOGICA DE LA COTIZACIÓN OFICIAL (FIJA + PAGO INICIAL) ---
+    // --- 4. CALCULAR COTIZACIÓN ---
     function calculateQuote() {
-      const countryCode = document.getElementById('countrySelect').value;
+      const cElem = document.getElementById('countrySelect');
+      if(!cElem) return;
+      const countryCode = cElem.value;
       const data = countries[countryCode];
-      let rate = parseFloat(document.getElementById('exchangeRate').value) || data.rate;
+      
+      const exRateElem = document.getElementById('exchangeRate');
+      let rate = parseFloat(exRateElem ? exRateElem.value : 0) || data.rate;
 
-      // A) DETERMINAR PRECIO BASE (Siempre viene de los botones)
-      const program = document.querySelector('input[name="programType"]:checked').value;
-      const hasScholarship = document.getElementById('scholarshipSwitch').checked;
+      const progElem = document.querySelector('input[name="programType"]:checked');
+      if(!progElem) return;
+      const program = progElem.value;
+
+      const scholElem = document.getElementById('scholarshipSwitch');
+      const hasScholarship = scholElem ? scholElem.checked : true;
+      
       const baseEur = prices[data.region][program][hasScholarship ? 'scholarship' : 'full'];
       
-      // Badges UI
       const isIntensive = program === 'intensive';
-      document.getElementById('intensiveBadge').classList.toggle('d-none', !isIntensive);
-      document.getElementById('intensiveAlert').classList.toggle('d-none', !isIntensive);
+      const intBadge = document.getElementById('intensiveBadge');
+      if(intBadge) intBadge.classList.toggle('d-none', !isIntensive);
+      
+      const intAlert = document.getElementById('intensiveAlert');
+      if(intAlert) intAlert.classList.toggle('d-none', !isIntensive);
 
-      // B) MOSTRAR PRECIO GRANDE (INALTERABLE por pago inicial)
       const baseUsd = baseEur * EUR_TO_USD;
       let localVal = (countryCode === 'ES') ? baseEur : (baseUsd * rate);
 
-      document.getElementById('tableCurrency').innerText = data.currency;
-      document.getElementById('taxIdContainer').innerHTML = `<span class="badge bg-light text-primary border"><i class="bi bi-card-heading"></i> ${data.taxId}</span>`;
+      const tabCurr = document.getElementById('tableCurrency');
+      if(tabCurr) tabCurr.innerText = data.currency;
+      
+      const taxCont = document.getElementById('taxIdContainer');
+      if(taxCont) taxCont.innerHTML = `<span class="badge bg-light text-primary border"><i class="bi bi-card-heading"></i> ${data.taxId}</span>`;
 
-      document.getElementById('displayTotalEur').innerText = fmt(baseEur, 'EUR');
-      document.getElementById('displayTotalUsd').innerText = '≈ ' + fmt(baseUsd, 'USD');
-      document.getElementById('displayTotalLocal').innerText = `Local: ${fmt(localVal, data.currency)}`;
+      const dispEur = document.getElementById('displayTotalEur');
+      if(dispEur) dispEur.innerText = fmt(baseEur, 'EUR');
+      
+      const dispUsd = document.getElementById('displayTotalUsd');
+      if(dispUsd) dispUsd.innerText = '≈ ' + fmt(baseUsd, 'USD');
+      
+      const dispLoc = document.getElementById('displayTotalLocal');
+      if(dispLoc) dispLoc.innerText = `Local: ${fmt(localVal, data.currency)}`;
 
-      // C) CALCULAR FINANCIACIÓN (Aquí sí entra el Pago Inicial)
-      let initEur = parseFloat(document.getElementById('initialPayment').value) || 0;
+      const initPayElem = document.getElementById('initialPayment');
+      let initEur = parseFloat(initPayElem ? initPayElem.value : 0) || 0;
       let remnantEur = Math.max(0, baseEur - initEur);
       
       const tbody = document.getElementById('installmentTable');
+      if(!tbody) return;
       tbody.innerHTML = '';
+      
       const note = document.getElementById('financeNote');
 
-      // Caso 1: Tabla Fija (Solo Tradicional, Sin pago inicial, con Beca)
-      // Usamos la tabla fija hardcodeada solo si NO hay pago inicial y es el caso estándar
       if (initEur === 0 && !isIntensive && hasScholarship) {
           const fixed = FIXED_QUOTES[data.region];
           [12, 9, 6, 3].forEach(m => {
-             let valBase = fixed[m]; // Cuota fija en USD o EUR
+             let valBase = fixed[m]; 
              let valLoc = (countryCode === 'ES' || countryCode === 'US') ? valBase : (valBase * rate);
              tbody.innerHTML += `<tr>
                 <td><span class="badge bg-primary rounded-pill">${m}</span> Cuotas</td>
@@ -370,9 +413,8 @@
                 <td class="text-end text-muted">${fmt(valLoc, data.currency)}</td>
              </tr>`;
           });
-          note.innerText = "Precios de tabla oficial.";
+          if(note) note.innerText = "Precios de tabla oficial.";
       } 
-      // Caso 2: Cálculo Dinámico (Intensive, Sin Beca, o CON Pago Inicial)
       else {
           if (initEur > 0) {
               tbody.innerHTML += `<tr class="table-warning"><td colspan="3" class="text-center small fw-bold">
@@ -383,14 +425,12 @@
 
           [12, 9, 6, 3].forEach(m => {
              let quoteAmount = 0;
-             // Formula de interés
              if (countryCode === 'ES') {
                quoteAmount = (remnantEur * (1 + INTEREST_RATES[m])) / m;
              } else {
                let remnantUsd = remnantEur * EUR_TO_USD;
                quoteAmount = (remnantUsd * (1 + INTEREST_RATES[m])) / m;
              }
-             
              let quoteLoc = (countryCode === 'ES' || countryCode === 'US') ? quoteAmount : (quoteAmount * rate);
              let sym = countryCode === 'ES' ? '€' : '$';
              
@@ -400,7 +440,7 @@
                 <td class="text-end text-muted">${fmt(quoteLoc, data.currency)}</td>
              </tr>`;
           });
-          note.innerText = "Financiación calculada sobre saldo restante.";
+          if(note) note.innerText = "Financiación calculada sobre saldo restante.";
       }
     }
     
