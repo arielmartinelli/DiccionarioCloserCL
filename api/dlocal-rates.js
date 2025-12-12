@@ -1,44 +1,49 @@
 export default async function handler(req, res) {
-  // --- CONFIGURACIÓN ---
-  
-  // 1. Entorno: false para PRODUCCIÓN (Claves reales)
-  const IS_SANDBOX = false; 
-
-  // 2. LLAVES FORZADAS (Hardcoded)
-  // Las hemos escrito directamente aquí para evitar errores de configuración en Vercel.
+  // --- TUS CLAVES (Hardcoded para asegurar que las lee) ---
   const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
   const SECRET_KEY = "FGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
 
-  if (!API_KEY || !SECRET_KEY) {
-    return res.status(500).json({ error: 'Faltan las API Keys en el código.' });
-  }
+  // Endpoints
+  const URL_LIVE = 'https://api.dlocalgo.com/v1/currency-exchanges';
+  const URL_SBX = 'https://api-sbx.dlocalgo.com/v1/currency-exchanges';
 
-  // ---------------------
-
-  const endpoint = IS_SANDBOX 
-    ? 'https://api-sbx.dlocalgo.com/v1/currency-exchanges' // Sandbox
-    : 'https://api.dlocalgo.com/v1/currency-exchanges';     // Producción (Live)
-
-  try {
-    const response = await fetch(endpoint, {
+  // Función auxiliar para conectar
+  async function tryConnect(url) {
+    return await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY.trim()}:${SECRET_KEY.trim()}`
       }
     });
+  }
 
+  try {
+    // 1. INTENTO PRINCIPAL: MODO LIVE (Producción)
+    let response = await tryConnect(URL_LIVE);
+
+    // 2. AUTO-CORRECCIÓN: Si Live nos rechaza (403), probamos Sandbox automáticamente
+    if (response.status === 403 || response.status === 401) {
+      console.log("Credenciales rechazadas en Live. Intentando Sandbox...");
+      const responseSbx = await tryConnect(URL_SBX);
+      
+      // Si Sandbox funciona, usamos esa respuesta en su lugar
+      if (responseSbx.ok) {
+        response = responseSbx;
+      }
+    }
+
+    // 3. Si sigue fallando después de probar ambos
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Error dLocal:", errorText); 
       return res.status(response.status).json({ 
-        error: `dLocal Error (${response.status}) en modo ${IS_SANDBOX ? 'SANDBOX' : 'LIVE'}: ${errorText}` 
+        error: `Las credenciales fueron rechazadas en AMBOS entornos (Live y Sandbox). dLocal dice: ${errorText}` 
       });
     }
 
+    // 4. ÉXITO: Procesar datos
     const data = await response.json();
     
-    // Mapeo de datos para el frontend
     const cleanRates = {};
     const currencyMap = {
       'ARS': 'AR', 'MXN': 'MX', 'COP': 'CO', 'CLP': 'CL',
@@ -46,21 +51,19 @@ export default async function handler(req, res) {
       'BOB': 'BO', 'PYG': 'PY', 'USD': 'US', 'EUR': 'ES'
     };
 
-    // Validación de formato
     if (Array.isArray(data)) {
       data.forEach(item => {
         const countryCode = currencyMap[item.target_currency];
         if (countryCode) cleanRates[countryCode] = item.value;
       });
     } else {
-      console.error("Respuesta inesperada de dLocal:", data);
-      return res.status(500).json({ error: "Formato inesperado de dLocal (no es array)" });
+      return res.status(500).json({ error: "Formato de respuesta desconocido." });
     }
 
     res.status(200).json(cleanRates);
 
   } catch (error) {
     console.error("Error Crítico:", error);
-    res.status(500).json({ error: `Fallo interno del código: ${error.message}` });
+    res.status(500).json({ error: `Fallo interno del servidor: ${error.message}` });
   }
 }
