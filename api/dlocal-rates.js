@@ -4,17 +4,16 @@ export default async function handler(req, res) {
   // 1. Entorno: false para PRODUCCIÓN (Claves reales)
   const IS_SANDBOX = false; 
 
-  // 2. OBTENCIÓN DE CLAVES
-  // Opción A (Recomendada): Leer desde Vercel
+  // 2. LLAVES SEGURAS (Variables de Entorno)
+  // Las lee desde la configuración de Vercel. NO están visibles en el código.
+  // Asegúrate de haber agregado DLOCAL_API_KEY y DLOCAL_SECRET_KEY en Vercel.
   const API_KEY = process.env.DLOCAL_API_KEY;
   const SECRET_KEY = process.env.DLOCAL_SECRET_KEY;
 
-  // Opción B (Solo para pruebas de emergencia): Descomenta estas lineas si Vercel falla
-  // const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
-  // const SECRET_KEY = "FGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
-
+  // Validación de seguridad: Si Vercel no tiene las claves, avisamos al log pero no mostramos nada sensible.
   if (!API_KEY || !SECRET_KEY) {
-    return res.status(500).json({ error: 'Faltan las API Keys en Vercel.' });
+    console.error("Error: Faltan las variables de entorno DLOCAL_API_KEY o DLOCAL_SECRET_KEY.");
+    return res.status(500).json({ error: 'Error de configuración del servidor (Faltan credenciales).' });
   }
 
   // ---------------------
@@ -34,8 +33,9 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("Error dLocal:", errorText); // Para ver en logs de Vercel
       return res.status(response.status).json({ 
-        error: `dLocal Error (${response.status}): ${errorText}` 
+        error: `dLocal respondió error (${response.status}): ${errorText}` 
       });
     }
 
@@ -49,10 +49,16 @@ export default async function handler(req, res) {
       'BOB': 'BO', 'PYG': 'PY', 'USD': 'US', 'EUR': 'ES'
     };
 
-    data.forEach(item => {
-      const countryCode = currencyMap[item.target_currency];
-      if (countryCode) cleanRates[countryCode] = item.value;
-    });
+    // Validamos que sea un array antes de iterar
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        const countryCode = currencyMap[item.target_currency];
+        if (countryCode) cleanRates[countryCode] = item.value;
+      });
+    } else {
+      console.error("Respuesta inesperada de dLocal:", data);
+      return res.status(500).json({ error: "Formato inesperado de dLocal (no es array)" });
+    }
 
     res.status(200).json(cleanRates);
 
