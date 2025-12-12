@@ -1,49 +1,83 @@
 export default async function handler(req, res) {
-  // --- TUS CLAVES (Hardcoded para asegurar que las lee) ---
-  const API_KEY = "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV";
-  const SECRET_KEY = "FGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU";
+  // --- CONFIGURACIÓN A PRUEBA DE FALLOS ---
 
-  // Endpoints
+  // Lista de todas las credenciales que has compartido.
+  // El código probará una por una hasta que alguna funcione.
+  const CREDENTIALS_LIST = [
+    {
+      name: "Set Actual (hUDH...)",
+      apiKey: "hUDHkiMNhnrEbisqnfdJFNxluOPZVQdV",
+      secretKey: "FGibNWnBrdfVr4HR13lgkYrXEm9DMHVY8kn62zGU"
+    },
+    {
+      name: "Set Anterior (FIGi...)", 
+      apiKey: "FIGiDdGPrpgcKoLKBJBkwRDSzxpOpecZ",
+      secretKey: "Cov4TVofZc0CYbShMw4QSjlR7e33HzIbCXcP5x9G"
+    }
+  ];
+
   const URL_LIVE = 'https://api.dlocalgo.com/v1/currency-exchanges';
   const URL_SBX = 'https://api-sbx.dlocalgo.com/v1/currency-exchanges';
 
-  // Función auxiliar para conectar
-  async function tryConnect(url) {
-    return await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY.trim()}:${SECRET_KEY.trim()}`
-      }
+  // Función auxiliar de conexión
+  async function tryRequest(url, key, secret) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key.trim()}:${secret.trim()}`
+        }
+      });
+      return res;
+    } catch (e) {
+      return null; // Error de red
+    }
+  }
+
+  // --- LÓGICA DE INTENTOS MÚLTIPLES ---
+  
+  let successResponse = null;
+  let lastError = "";
+
+  // 1. Recorremos cada par de llaves
+  for (const cred of CREDENTIALS_LIST) {
+    if (!cred.apiKey || !cred.secretKey) continue;
+
+    console.log(`Probando credenciales: ${cred.name}...`);
+
+    // 2. Intentamos Producción (Live)
+    let res = await tryRequest(URL_LIVE, cred.apiKey, cred.secretKey);
+    
+    // Si falla por permisos (403/401), intentamos Sandbox
+    if (res && (res.status === 403 || res.status === 401)) {
+       console.log("  Rechazado en Live. Probando Sandbox...");
+       res = await tryRequest(URL_SBX, cred.apiKey, cred.secretKey);
+    }
+
+    // 3. Si funcionó (Status 200), guardamos y salimos del bucle
+    if (res && res.ok) {
+      successResponse = res;
+      console.log("  ¡CONEXIÓN EXITOSA!");
+      break; 
+    } else if (res) {
+      const txt = await res.text();
+      lastError = `Error ${res.status}: ${txt}`;
+    }
+  }
+
+  // --- RESPUESTA FINAL ---
+
+  if (!successResponse) {
+    return res.status(500).json({ 
+      error: `No se pudo conectar con ninguna llave. Último error: ${lastError}` 
     });
   }
 
   try {
-    // 1. INTENTO PRINCIPAL: MODO LIVE (Producción)
-    let response = await tryConnect(URL_LIVE);
-
-    // 2. AUTO-CORRECCIÓN: Si Live nos rechaza (403), probamos Sandbox automáticamente
-    if (response.status === 403 || response.status === 401) {
-      console.log("Credenciales rechazadas en Live. Intentando Sandbox...");
-      const responseSbx = await tryConnect(URL_SBX);
-      
-      // Si Sandbox funciona, usamos esa respuesta en su lugar
-      if (responseSbx.ok) {
-        response = responseSbx;
-      }
-    }
-
-    // 3. Si sigue fallando después de probar ambos
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).json({ 
-        error: `Las credenciales fueron rechazadas en AMBOS entornos (Live y Sandbox). dLocal dice: ${errorText}` 
-      });
-    }
-
-    // 4. ÉXITO: Procesar datos
-    const data = await response.json();
+    const data = await successResponse.json();
     
+    // Mapeo de datos
     const cleanRates = {};
     const currencyMap = {
       'ARS': 'AR', 'MXN': 'MX', 'COP': 'CO', 'CLP': 'CL',
@@ -56,14 +90,12 @@ export default async function handler(req, res) {
         const countryCode = currencyMap[item.target_currency];
         if (countryCode) cleanRates[countryCode] = item.value;
       });
+      res.status(200).json(cleanRates);
     } else {
-      return res.status(500).json({ error: "Formato de respuesta desconocido." });
+      res.status(500).json({ error: "Formato de respuesta incorrecto de dLocal." });
     }
 
-    res.status(200).json(cleanRates);
-
   } catch (error) {
-    console.error("Error Crítico:", error);
-    res.status(500).json({ error: `Fallo interno del servidor: ${error.message}` });
+    res.status(500).json({ error: `Error procesando datos: ${error.message}` });
   }
 }
